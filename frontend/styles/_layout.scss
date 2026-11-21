@@ -1,0 +1,72 @@
+// ==============================================================================
+// Group 4 To-Do App — Application Layout, Navigation & Grid System
+// Author: Naivedya Pramod Yadav (@Not-naive18) — UI/UX Designer
+// ==============================================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.app-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $space-6;
+  font-family: $font-family-base;
+
+  @include mobile {
+    padding: $space-3;
+  }
+}
+
+.navbar {
+  @include card-surface;
+  padding: 0.875rem $space-6;
+  @include flex-between;
+  margin-bottom: $space-6;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-slate-900;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: $space-2;
+
+    .nav-link {
+      padding: 0.5rem $space-4;
+      font-size: $font-size-base;
+      font-weight: $font-weight-medium;
+      color: $color-slate-500;
+      text-decoration: none;
+      border-radius: $radius-sm;
+      transition: all 0.15s ease;
+
+      &:hover,
+      &.active {
+        color: $color-primary-600;
+        background-color: $color-primary-50;
+      }
+    }
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+  }
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  background-color: $color-primary-200;
+  color: $color-primary-800;
+  @include flex-center;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+}

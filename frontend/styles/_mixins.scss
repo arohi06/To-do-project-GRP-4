@@ -1,0 +1,61 @@
+// ==============================================================================
+// Group 4 To-Do App — SCSS Mixins & Helpers
+// Author: Naivedya Pramod Yadav (@Not-naive18) — UI/UX Designer
+// ==============================================================================
+
+@use 'variables' as *;
+
+// --- Responsive Breakpoints ---
+@mixin mobile {
+  @media (max-width: #{$breakpoint-mobile - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$breakpoint-mobile}) and (max-width: #{$breakpoint-tablet - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-tablet}) {
+    @content;
+  }
+}
+
+// --- Flexbox Centering Helper ---
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// --- Text Truncation ---
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// --- Card Surface ---
+@mixin card-surface {
+  background: #FFFFFF;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+// --- Focus Ring Helper ---
+@mixin focus-ring {
+  outline: none;
+  border-color: $color-primary-600;
+  box-shadow: 0 0 0 3px rgba($color-primary-600, 0.15);
+}
