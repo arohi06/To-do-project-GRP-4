@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task List — TaskMaster Group 4</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../frontend/styles/styles.css">
+  <style>
+    body { background: #F8FAFC; font-family: 'Inter', sans-serif; padding: 24px; color: #0F172A; }
+    .card { background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .badge { padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div style="max-width: 1200px; margin: 0 auto;">
+    
+    <!-- Navbar -->
+    <header style="background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.25rem;">
+        <span style="background: #4F46E5; color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">✓</span>
+        <span>TaskMaster GRP-4</span>
+      </div>
+      <nav style="display: flex; gap: 16px;">
+        <a href="dashboard.html" style="text-decoration: none; color: #64748B; font-weight: 500; padding: 8px 16px;">Dashboard</a>
+        <a href="task-list.html" style="text-decoration: none; color: #4F46E5; font-weight: 600; background: #EEF2FF; padding: 8px 16px; border-radius: 6px;">Task List</a>
+      </nav>
+      <a href="add-task-modal.html" style="text-decoration: none; background: #4F46E5; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">+ Add Task</a>
+    </header>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div>
+        <h1 style="font-size: 1.75rem; font-weight: 700;">Task Management</h1>
+        <p style="color: #64748B; font-size: 0.938rem;">View, filter, edit, and toggle completion states.</p>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div style="background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 16px;">
+      <input type="text" placeholder="Search tasks..." style="flex: 1; padding: 10px 14px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 0.875rem;">
+      <select style="padding: 10px 14px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 0.875rem;">
+        <option>All Statuses</option>
+        <option>Pending</option>
+        <option>Completed</option>
+      </select>
+      <select style="padding: 10px 14px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 0.875rem;">
+        <option>All Priorities</option>
+        <option>High Priority</option>
+        <option>Medium Priority</option>
+        <option>Low Priority</option>
+      </select>
+    </div>
+
+    <!-- Task Items -->
+    <div class="card">
+      <input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #4F46E5;">
+      <div style="flex: 1;">
+        <div style="font-weight: 600; text-decoration: line-through; color: #94A3B8;">Design To-Do app screens & style guide</div>
+        <div style="font-size: 0.813rem; color: #94A3B8;">docs/ui-ux wireframes and frontend/styles SCSS tokens.</div>
+        <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center;">
+          <span class="badge" style="background: #FEE2E2; color: #B91C1C;">HIGH PRIORITY</span>
+          <span class="badge" style="background: #D1FAE5; color: #065F46;">COMPLETED</span>
+          <span style="font-size: 0.75rem; color: #94A3B8;">📅 Due: 2026-11-21 &bull; Naivedya Pramod Yadav</span>
+        </div>
+      </div>
+      <div>
+        <button style="background: transparent; border: 1px solid #E2E8F0; padding: 6px 10px; border-radius: 6px; cursor: pointer;">✏️</button>
+        <button style="background: transparent; border: 1px solid #E2E8F0; padding: 6px 10px; border-radius: 6px; cursor: pointer;">🗑️</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <input type="checkbox" style="width: 20px; height: 20px; accent-color: #4F46E5;">
+      <div style="flex: 1;">
+        <div style="font-weight: 600; color: #0F172A;">Develop Angular frontend and connect API services</div>
+        <div style="font-size: 0.813rem; color: #64748B;">Build Dashboard, Add Task, and Task List connecting with backend REST APIs.</div>
+        <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center;">
+          <span class="badge" style="background: #FEE2E2; color: #B91C1C;">HIGH PRIORITY</span>
+          <span class="badge" style="background: #FEF3C7; color: #92400E;">PENDING</span>
+          <span style="font-size: 0.75rem; color: #94A3B8;">📅 Due: 2026-11-21 &bull; Dhruva Dipak Pimpale</span>
+        </div>
+      </div>
+      <div>
+        <button style="background: transparent; border: 1px solid #E2E8F0; padding: 6px 10px; border-radius: 6px; cursor: pointer;">✏️</button>
+        <button style="background: transparent; border: 1px solid #E2E8F0; padding: 6px 10px; border-radius: 6px; cursor: pointer;">🗑️</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <input type="checkbox" style="width: 20px; height: 20px; accent-color: #4F46E5;">
+      <div style="flex: 1;">
+        <div style="font-weight: 600; color: #0F172A;">Develop Fastify backend REST API endpoints</div>
+        <div style="font-size: 0.813rem; color: #64748B;">CRUD routes for /api/tasks with Knex database models and CORS.</div>
+        <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center;">
+          <span class="badge" style="background: #FEE2E2; color: #B91C1C;">HIGH PRIORITY</span>
+          <span class="badge" style="background: #FEF3C7; color: #92400E;">PENDING</span>
+          <span style="font-size: 0.75rem; color: #94A3B8;">📅 Due: 2026-11-21 &bull; Adhira Mahesh</span>
+        </div>
+      </div>
+      <div>
+        <button style="background: transparent; border: 1px solid #E2E8F0; padding: 6px 10px; border-radius: 6px; cursor: pointer;">✏️</button>
+        <button style="background: transparent; border: 1px solid #E2E8F0; padding: 6px 10px; border-radius: 6px; cursor: pointer;">🗑️</button>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 32px;">
+      <a href="index.html" style="color: #4F46E5; font-weight: 600; text-decoration: none;">← Return to Master Prototype (index.html)</a>
+    </div>
+
+  </div>
+</body>
+</html>

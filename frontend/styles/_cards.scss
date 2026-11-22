@@ -1,0 +1,134 @@
+// ==============================================================================
+// Group 4 To-Do App — Card Components (KPI Stat Cards & Task Cards)
+// Author: Naivedya Pramod Yadav (@Not-naive18) — UI/UX Designer
+// ==============================================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// --- Dashboard KPI Stat Cards ---
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: $space-5;
+  margin-bottom: $space-6;
+}
+
+.stat-card {
+  @include card-surface;
+  padding: $space-5;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+
+  &-total::before { background-color: $color-primary-500; }
+  &-completed::before { background-color: $color-success-500; }
+  &-pending::before { background-color: #F59E0B; }
+  &-urgent::before { background-color: $color-danger-500; }
+
+  .stat-header {
+    @include flex-between;
+    margin-bottom: $space-2;
+  }
+
+  .stat-label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-slate-400;
+  }
+
+  .stat-icon {
+    font-size: $font-size-lg;
+  }
+
+  .stat-value {
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $color-slate-900;
+    line-height: 1.1;
+    margin-bottom: $space-2;
+  }
+
+  .stat-footer {
+    font-size: $font-size-xs;
+    color: $color-slate-500;
+  }
+}
+
+// --- Task Item Cards ---
+.task-card {
+  @include card-surface;
+  padding: $space-4 $space-5;
+  margin-bottom: $space-3;
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: $color-slate-300;
+  }
+
+  .task-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-slate-900;
+    margin-bottom: $space-1;
+    transition: color 0.15s ease;
+  }
+
+  .task-desc {
+    font-size: $font-size-sm;
+    color: $color-slate-500;
+    margin-bottom: $space-2;
+    @include text-truncate;
+  }
+
+  .task-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-2;
+  }
+
+  .task-due-date {
+    font-size: $font-size-xs;
+    color: $color-slate-400;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .task-actions {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+  }
+
+  // --- Completed State ---
+  &.is-completed {
+    background-color: #FAFAFA;
+
+    .task-title {
+      text-decoration: line-through;
+      color: $color-slate-400;
+    }
+
+    .task-desc {
+      color: $color-slate-400;
+    }
+  }
+}

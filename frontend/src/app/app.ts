@@ -1,7 +1,8 @@
+
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TaskService, Task } from './services/task.service';
+import { TaskService, Task, TaskStatus, TaskPriority } from './services/task.service';
 
 @Component({
   selector: 'app-root',
@@ -12,30 +13,40 @@ import { TaskService, Task } from './services/task.service';
 })
 export class App implements OnInit {
   tasks = signal<Task[]>([]);
-  filterStatus = signal<string>('All');
-  editingTaskId = signal<number | null>(null);
-  isLoading = signal<boolean>(false);
+  filterStatus = signal<'all' | TaskStatus>('all');
+  editingTaskId = signal<string | null>(null);
+  isLoading = signal(false);
+  errorMessage = signal('');
 
-  // Form model matching database fields
   taskForm: Task = {
     title: '',
     description: '',
-    status: 'Pending',
-    priority: 'Medium',
-    due_date: ''
+    status: 'pending',
+    priority: 'medium',
+    due_date: null
   };
 
-  // Dashboard summary counts
   totalTasks = computed(() => this.tasks().length);
-  pendingTasks = computed(() => this.tasks().filter(t => t.status === 'Pending').length);
-  inProgressTasks = computed(() => this.tasks().filter(t => t.status === 'In Progress').length);
-  completedTasks = computed(() => this.tasks().filter(t => t.status === 'Completed').length);
 
-  // Filtered task list
+  pendingTasks = computed(
+    () => this.tasks().filter(task => task.status === 'pending').length
+  );
+
+  completedTasks = computed(
+    () => this.tasks().filter(task => task.status === 'completed').length
+  );
+
+  // Kept temporarily for compatibility with the existing dashboard template.
+  inProgressTasks = computed(() => 0);
+
   filteredTasks = computed(() => {
     const status = this.filterStatus();
-    if (status === 'All') return this.tasks();
-    return this.tasks().filter(t => t.status === status);
+
+    if (status === 'all') {
+      return this.tasks();
+    }
+
+    return this.tasks().filter(task => task.status === status);
   });
 
   constructor(private taskService: TaskService) {}
@@ -46,58 +57,65 @@ export class App implements OnInit {
 
   loadTasks(): void {
     this.isLoading.set(true);
-    this.taskService.getTasks().subscribe(data => {
-      if (data && data.length > 0) {
+    this.errorMessage.set('');
+
+    this.taskService.getTasks().subscribe({
+      next: data => {
         this.tasks.set(data);
-      } else {
-        // Starter sample data so UI works offline until backend connects
-        this.tasks.set([
-          {
-            id: 1,
-            title: 'Design Dashboard & Task UI',
-            description: 'Build responsive Angular components for task management.',
-            status: 'Completed',
-            priority: 'High',
-            due_date: '2026-11-20'
-          },
-          {
-            id: 2,
-            title: 'Connect Frontend with Backend API',
-            description: 'Verify GET, POST, PUT, and DELETE endpoints on localhost.',
-            status: 'In Progress',
-            priority: 'High',
-            due_date: '2026-11-21'
-          },
-          {
-            id: 3,
-            title: 'Test Edge Cases & Submit PR',
-            description: 'Check empty form validation and push feature/frontend branch.',
-            status: 'Pending',
-            priority: 'Medium',
-            due_date: '2026-11-21'
-          }
-        ]);
+        this.isLoading.set(false);
+      },
+      error: error => {
+        this.errorMessage.set(
+          error.error?.message || 'Unable to load tasks. Please check the backend connection.'
+        );
+        this.isLoading.set(false);
       }
-      this.isLoading.set(false);
     });
   }
 
   onSubmit(): void {
-    if (!this.taskForm.title.trim()) return;
+    if (!this.taskForm.title.trim()) {
+      this.errorMessage.set('Please enter a task title.');
+      return;
+    }
+
+    this.errorMessage.set('');
+
+    const payload: Partial<Task> = {
+      title: this.taskForm.title.trim(),
+      description: this.taskForm.description || null,
+      status: this.taskForm.status,
+      priority: this.taskForm.priority,
+      due_date: this.taskForm.due_date
+    };
 
     const editId = this.editingTaskId();
-    if (editId !== null) {
-      const updated: Task = { ...this.taskForm, id: editId };
-      this.taskService.updateTask(editId, updated).subscribe(() => {
-        this.tasks.update(list => list.map(t => (t.id === editId ? updated : t)));
-        this.resetForm();
+
+    if (editId) {
+      this.taskService.updateTask(editId, payload).subscribe({
+        next: updated => {
+          this.tasks.update(list =>
+            list.map(task => task.id === editId ? updated : task)
+          );
+          this.resetForm();
+        },
+        error: error => {
+          this.errorMessage.set(
+            error.error?.message || 'Unable to update task.'
+          );
+        }
       });
     } else {
-      const newTask: Task = { ...this.taskForm };
-      this.taskService.createTask(newTask).subscribe(created => {
-        const savedTask = { ...newTask, id: created?.id || Date.now() };
-        this.tasks.update(list => [savedTask, ...list]);
-        this.resetForm();
+      this.taskService.createTask(payload).subscribe({
+        next: created => {
+          this.tasks.update(list => [created, ...list]);
+          this.resetForm();
+        },
+        error: error => {
+          this.errorMessage.set(
+            error.error?.message || 'Unable to create task.'
+          );
+        }
       });
     }
   }
@@ -105,40 +123,63 @@ export class App implements OnInit {
   editTask(task: Task): void {
     this.editingTaskId.set(task.id ?? null);
     this.taskForm = { ...task };
+    this.errorMessage.set('');
   }
 
   toggleStatus(task: Task): void {
-    const nextStatus: Task['status'] =
-      task.status === 'Pending'
-        ? 'In Progress'
-        : task.status === 'In Progress'
-        ? 'Completed'
-        : 'Pending';
+    if (!task.id) return;
 
-    const updated: Task = { ...task, status: nextStatus };
-    if (task.id !== undefined) {
-      this.taskService.updateTask(task.id, updated).subscribe(() => {
-        this.tasks.update(list => list.map(t => (t.id === task.id ? updated : t)));
-      });
-    }
+    const updatedStatus: TaskStatus =
+      task.status === 'pending' ? 'completed' : 'pending';
+
+    this.taskService.updateTask(task.id, {
+      status: updatedStatus
+    }).subscribe({
+      next: updated => {
+        this.tasks.update(list =>
+          list.map(item => item.id === task.id ? updated : item)
+        );
+      },
+      error: error => {
+        this.errorMessage.set(
+          error.error?.message || 'Unable to update task status.'
+        );
+      }
+    });
   }
 
-  deleteTask(id?: number): void {
-    if (id === undefined) return;
-    this.taskService.deleteTask(id).subscribe(() => {
-      this.tasks.update(list => list.filter(t => t.id !== id));
-      if (this.editingTaskId() === id) this.resetForm();
+  deleteTask(id?: string): void {
+    if (!id) return;
+
+    this.taskService.deleteTask(id).subscribe({
+      next: () => {
+        this.tasks.update(list =>
+          list.filter(task => task.id !== id)
+        );
+
+        if (this.editingTaskId() === id) {
+          this.resetForm();
+        }
+      },
+      error: error => {
+        this.errorMessage.set(
+          error.error?.message || 'Unable to delete task.'
+        );
+      }
     });
   }
 
   resetForm(): void {
     this.editingTaskId.set(null);
+
     this.taskForm = {
       title: '',
       description: '',
-      status: 'Pending',
-      priority: 'Medium',
-      due_date: ''
+      status: 'pending',
+      priority: 'medium',
+      due_date: null
     };
+
+    this.errorMessage.set('');
   }
 }

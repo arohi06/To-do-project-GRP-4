@@ -1,0 +1,30 @@
+// ==============================================================================
+// Group 4 To-Do App — Master SCSS Theme
+// Author: Naivedya Pramod Yadav (@Not-naive18) — UI/UX Designer
+// ==============================================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'layout';
+@use 'buttons';
+@use 'forms';
+@use 'badges';
+@use 'cards';
+@use 'modal';
+
+// Global application typography & base reset
+:root {
+  --primary-color: #{$color-primary-600};
+  --bg-color: #{$color-slate-50};
+  --text-color: #{$color-slate-900};
+}
+
+html, body {
+  font-family: $font-family-base;
+  background-color: $color-slate-50;
+  color: $color-slate-900;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
