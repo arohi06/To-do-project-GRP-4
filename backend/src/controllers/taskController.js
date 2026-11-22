@@ -1,64 +1,70 @@
+
 import db from '../database/knex.js';
 
 /**
- * Task Controller - Implements business logic and Knex.js database operations
- * for To-Do tasks: Create, Read, Update, Delete.
+ * Retrieve the currently authenticated, active user.
+ * The database is checked so that outdated JWT role information
+ * cannot grant permissions after an account is changed or disabled.
  */
+async function getAuthenticatedUser(request) {
+  return db('users')
+    .select('id', 'name', 'email', 'role', 'is_active')
+    .where({
+      id: request.user.sub,
+      is_active: true
+    })
+    .first();
+}
 
 /**
  * CREATE a new task
  * POST /api/tasks
- *
- * Database connection:
- * Executes:
- *   INSERT INTO "tasks" ("user_id", "title", "description", "status", "priority", "due_date")
- *   VALUES ($1, $2, $3, $4, $5, $6)
- *   RETURNING *
  */
 export async function createTask(request, reply) {
-  const { title, description, status, priority, due_date, user_id } = request.body;
+  const currentUser = await getAuthenticatedUser(request);
 
-  // Validate title is not empty or whitespace only
+  if (!currentUser) {
+    return reply.code(401).send({
+      success: false,
+      message: 'User account not found or inactive.'
+    });
+  }
+
+  const {
+    title,
+    description,
+    status,
+    priority,
+    due_date,
+    user_id
+  } = request.body;
+
   if (!title || !title.trim()) {
-    return reply.status(400).send({
+    return reply.code(400).send({
       statusCode: 400,
       error: 'Bad Request',
       message: 'Title is required and cannot be empty or whitespace only'
     });
   }
 
-  // Determine user_id:
-  // If user_id is passed, verify the user exists to satisfy foreign key constraint.
-  // If user_id is omitted, fallback to the first active user in the database.
-  let assignedUserId = user_id;
+  // Regular users can create tasks only for themselves.
+  // Administrators may assign a task to another active user.
+  let assignedUserId = currentUser.id;
 
-  if (assignedUserId) {
-    const existingUser = await db('users').where({ id: assignedUserId }).first();
-    if (!existingUser) {
-      return reply.status(400).send({
+  if (currentUser.role === 'admin' && user_id) {
+    const targetUser = await db('users')
+      .where({ id: user_id, is_active: true })
+      .first();
+
+    if (!targetUser) {
+      return reply.code(400).send({
         statusCode: 400,
         error: 'Bad Request',
-        message: `User with id "${assignedUserId}" does not exist`
+        message: 'The selected user does not exist or is inactive.'
       });
     }
-  } else {
-    const defaultUser = await db('users').where({ is_active: true }).orderBy('created_at', 'asc').first()
-      || await db('users').first();
 
-    if (defaultUser) {
-      assignedUserId = defaultUser.id;
-    } else {
-      // If database has no users, create a default user record
-      const [newDemoUser] = await db('users')
-        .insert({
-          name: 'Default User',
-          email: 'demo@example.com',
-          password_hash: '$2a$10$wTf7F.F1F8Pqv6q6Dq1r5eXnJ5J0qY4RzP6yY.1h8Jb1H3V7Bv2X2',
-          role: 'user'
-        })
-        .returning('*');
-      assignedUserId = newDemoUser.id;
-    }
+    assignedUserId = targetUser.id;
   }
 
   const [newTask] = await db('tasks')
@@ -72,7 +78,7 @@ export async function createTask(request, reply) {
     })
     .returning('*');
 
-  return reply.status(201).send({
+  return reply.code(201).send({
     success: true,
     message: 'Task created successfully',
     data: newTask
@@ -80,20 +86,28 @@ export async function createTask(request, reply) {
 }
 
 /**
- * READ all tasks (with optional query filtering and pagination)
- * GET /api/tasks
- *
- * Database connection:
- * Executes:
- *   SELECT "tasks".*, "users"."name" AS "user_name", "users"."email" AS "user_email"
- *   FROM "tasks"
- *   LEFT JOIN "users" ON "tasks"."user_id" = "users"."id"
- *   WHERE ... (optional filters)
- *   ORDER BY "tasks"."created_at" DESC
- *   LIMIT $limit OFFSET $offset
+ * READ tasks with filtering, searching and pagination.
+ * Regular users see only their own tasks.
+ * Administrators can see all users' tasks.
  */
 export async function getTasks(request, reply) {
-  const { status, priority, user_id, search, limit = 50, offset = 0 } = request.query;
+  const currentUser = await getAuthenticatedUser(request);
+
+  if (!currentUser) {
+    return reply.code(401).send({
+      success: false,
+      message: 'User account not found or inactive.'
+    });
+  }
+
+  const {
+    status,
+    priority,
+    user_id,
+    search,
+    limit = 50,
+    offset = 0
+  } = request.query;
 
   let query = db('tasks')
     .leftJoin('users', 'tasks.user_id', 'users.id')
@@ -103,6 +117,14 @@ export async function getTasks(request, reply) {
       'users.email as user_email'
     );
 
+  // Enforce task ownership for regular users.
+  if (currentUser.role !== 'admin') {
+    query = query.where('tasks.user_id', currentUser.id);
+  } else if (user_id) {
+    // Admins may filter tasks by a particular user.
+    query = query.where('tasks.user_id', user_id);
+  }
+
   if (status) {
     query = query.where('tasks.status', status);
   }
@@ -111,14 +133,13 @@ export async function getTasks(request, reply) {
     query = query.where('tasks.priority', priority);
   }
 
-  if (user_id) {
-    query = query.where('tasks.user_id', user_id);
-  }
-
   if (search && search.trim()) {
     const term = `%${search.trim()}%`;
+
     query = query.where(builder => {
-      builder.whereILike('tasks.title', term).orWhereILike('tasks.description', term);
+      builder
+        .whereILike('tasks.title', term)
+        .orWhereILike('tasks.description', term);
     });
   }
 
@@ -127,7 +148,7 @@ export async function getTasks(request, reply) {
     .limit(limit)
     .offset(offset);
 
-  return reply.status(200).send({
+  return reply.code(200).send({
     success: true,
     count: tasks.length,
     data: tasks
@@ -135,71 +156,76 @@ export async function getTasks(request, reply) {
 }
 
 /**
- * READ a single task by ID
- * GET /api/tasks/:id
- *
- * Database connection:
- * Executes:
- *   SELECT "tasks".*, "users"."name" AS "user_name", "users"."email" AS "user_email"
- *   FROM "tasks"
- *   LEFT JOIN "users" ON "tasks"."user_id" = "users"."id"
- *   WHERE "tasks"."id" = $1
- *   LIMIT 1
+ * READ a single task by ID.
  */
 export async function getTaskById(request, reply) {
+  const currentUser = await getAuthenticatedUser(request);
+
+  if (!currentUser) {
+    return reply.code(401).send({
+      success: false,
+      message: 'User account not found or inactive.'
+    });
+  }
+
   const { id } = request.params;
 
-  const task = await db('tasks')
+  let query = db('tasks')
     .leftJoin('users', 'tasks.user_id', 'users.id')
     .select(
       'tasks.*',
       'users.name as user_name',
       'users.email as user_email'
     )
-    .where('tasks.id', id)
-    .first();
+    .where('tasks.id', id);
+
+  if (currentUser.role !== 'admin') {
+    query = query.where('tasks.user_id', currentUser.id);
+  }
+
+  const task = await query.first();
 
   if (!task) {
-    return reply.status(404).send({
+    return reply.code(404).send({
       statusCode: 404,
       error: 'Not Found',
       message: `Task with id "${id}" not found`
     });
   }
 
-  return reply.status(200).send({
+  return reply.code(200).send({
     success: true,
     data: task
   });
 }
 
 /**
- * UPDATE an existing task by ID
- * PUT /api/tasks/:id
- *
- * Database connection:
- * Executes:
- *   UPDATE "tasks"
- *   SET ...fields..., "updated_at" = CURRENT_TIMESTAMP
- *   WHERE "id" = $id
- *   RETURNING *
+ * UPDATE an existing task.
  */
 export async function updateTask(request, reply) {
+  const currentUser = await getAuthenticatedUser(request);
+
+  if (!currentUser) {
+    return reply.code(401).send({
+      success: false,
+      message: 'User account not found or inactive.'
+    });
+  }
+
   const { id } = request.params;
   const updates = request.body;
 
   if (!updates || Object.keys(updates).length === 0) {
-    return reply.status(400).send({
+    return reply.code(400).send({
       statusCode: 400,
       error: 'Bad Request',
       message: 'At least one field must be provided to update'
     });
   }
 
-  // Validate title if provided
   if (updates.title !== undefined) {
     if (typeof updates.title !== 'string' || !updates.title.trim()) {
-      return reply.status(400).send({
+      return reply.code(400).send({
         statusCode: 400,
         error: 'Bad Request',
         message: 'Title cannot be empty or whitespace only'
@@ -207,43 +233,86 @@ export async function updateTask(request, reply) {
     }
   }
 
-  // Validate user_id if reassigned
-  if (updates.user_id !== undefined) {
-    const user = await db('users').where({ id: updates.user_id }).first();
-    if (!user) {
-      return reply.status(400).send({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: `User with id "${updates.user_id}" does not exist`
-      });
-    }
+  // Find the task while enforcing ownership.
+  let taskQuery = db('tasks').where({ id });
+
+  if (currentUser.role !== 'admin') {
+    taskQuery = taskQuery.where('user_id', currentUser.id);
   }
 
-  const updateData = {
-    updated_at: db.fn.now()
-  };
+  const existingTask = await taskQuery.first();
 
-  if (updates.title !== undefined) updateData.title = updates.title.trim();
-  if (updates.description !== undefined) updateData.description = updates.description;
-  if (updates.status !== undefined) updateData.status = updates.status;
-  if (updates.priority !== undefined) updateData.priority = updates.priority;
-  if (updates.due_date !== undefined) updateData.due_date = updates.due_date;
-  if (updates.user_id !== undefined) updateData.user_id = updates.user_id;
-
-  const [updatedTask] = await db('tasks')
-    .where({ id })
-    .update(updateData)
-    .returning('*');
-
-  if (!updatedTask) {
-    return reply.status(404).send({
+  if (!existingTask) {
+    return reply.code(404).send({
       statusCode: 404,
       error: 'Not Found',
       message: `Task with id "${id}" not found`
     });
   }
 
-  return reply.status(200).send({
+  const updateData = {
+    updated_at: db.fn.now()
+  };
+
+  if (updates.title !== undefined) {
+    updateData.title = updates.title.trim();
+  }
+
+  if (updates.description !== undefined) {
+    updateData.description = updates.description;
+  }
+
+  if (updates.status !== undefined) {
+    updateData.status = updates.status;
+  }
+
+  if (updates.priority !== undefined) {
+    updateData.priority = updates.priority;
+  }
+
+  if (updates.due_date !== undefined) {
+    updateData.due_date = updates.due_date;
+  }
+
+  // Only administrators can reassign a task to another user.
+  if (updates.user_id !== undefined && currentUser.role === 'admin') {
+    const targetUser = await db('users')
+      .where({
+        id: updates.user_id,
+        is_active: true
+      })
+      .first();
+
+    if (!targetUser) {
+      return reply.code(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'The selected user does not exist or is inactive.'
+      });
+    }
+
+    updateData.user_id = targetUser.id;
+  }
+
+  let updateQuery = db('tasks').where({ id });
+
+  if (currentUser.role !== 'admin') {
+    updateQuery = updateQuery.where('user_id', currentUser.id);
+  }
+
+  const [updatedTask] = await updateQuery
+    .update(updateData)
+    .returning('*');
+
+  if (!updatedTask) {
+    return reply.code(404).send({
+      statusCode: 404,
+      error: 'Not Found',
+      message: `Task with id "${id}" not found`
+    });
+  }
+
+  return reply.code(200).send({
     success: true,
     message: 'Task updated successfully',
     data: updatedTask
@@ -251,32 +320,39 @@ export async function updateTask(request, reply) {
 }
 
 /**
- * DELETE a task by ID
- * DELETE /api/tasks/:id
- *
- * Database connection:
- * Executes:
- *   DELETE FROM "tasks"
- *   WHERE "id" = $id
- *   RETURNING *
+ * DELETE a task.
  */
 export async function deleteTask(request, reply) {
+  const currentUser = await getAuthenticatedUser(request);
+
+  if (!currentUser) {
+    return reply.code(401).send({
+      success: false,
+      message: 'User account not found or inactive.'
+    });
+  }
+
   const { id } = request.params;
 
-  const [deletedTask] = await db('tasks')
-    .where({ id })
+  let deleteQuery = db('tasks').where({ id });
+
+  if (currentUser.role !== 'admin') {
+    deleteQuery = deleteQuery.where('user_id', currentUser.id);
+  }
+
+  const [deletedTask] = await deleteQuery
     .del()
     .returning('*');
 
   if (!deletedTask) {
-    return reply.status(404).send({
+    return reply.code(404).send({
       statusCode: 404,
       error: 'Not Found',
       message: `Task with id "${id}" not found`
     });
   }
 
-  return reply.status(200).send({
+  return reply.code(200).send({
     success: true,
     message: 'Task deleted successfully',
     data: deletedTask

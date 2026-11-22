@@ -19,6 +19,7 @@ export const createTaskSchema = {
       },
       description: {
         type: ['string', 'null'],
+	maxLength: 5000,
         description: 'Optional detailed description of the task'
       },
       status: {
@@ -214,6 +215,7 @@ export const updateTaskSchema = {
       },
       description: {
         type: ['string', 'null'],
+	maxLength: 5000,
         description: 'Task description'
       },
       status: {

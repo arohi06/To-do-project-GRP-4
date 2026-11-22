@@ -1,7 +1,11 @@
+
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
 import db from './database/knex.js';
 import taskRoutes from './routes/taskRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 /**
  * Build and configure the Fastify application.
@@ -18,8 +22,29 @@ export async function buildApp(opts = {}) {
   // Enable Cross-Origin Resource Sharing (CORS) for Angular frontend
   await app.register(cors, {
     origin: ['http://localhost:4200', 'http://127.0.0.1:4200'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT','PATCH','DELETE', 'OPTIONS'],
     credentials: true
+  });
+
+  // Register JWT authentication
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  await app.register(jwt, {
+    secret: process.env.JWT_SECRET
+  });
+
+  // Reusable authentication hook for protected routes
+  app.decorate('authenticate', async function (request, reply) {
+    try {
+      await request.jwtVerify();
+    } catch (error) {
+      return reply.code(401).send({
+        success: false,
+        message: 'Authentication required. Please log in.'
+      });
+    }
   });
 
   // Global Error Handler for consistent REST API responses
@@ -33,7 +58,11 @@ export async function buildApp(opts = {}) {
       });
     }
 
-    const statusCode = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
+    const statusCode =
+      error.statusCode && error.statusCode >= 400
+        ? error.statusCode
+        : 500;
+
     if (statusCode === 500) {
       request.log.error(error);
     }
@@ -54,13 +83,19 @@ export async function buildApp(opts = {}) {
     });
   });
 
+  // Register Authentication REST API routes under /api/auth
+  await app.register(authRoutes, { prefix: '/api/auth' });
+
   // Register Task REST API routes under /api/tasks
   await app.register(taskRoutes, { prefix: '/api/tasks' });
+    // Register Admin REST API routes under /api/admin
+  await app.register(adminRoutes, { prefix: '/api/admin' });
 
   // System Health Check Endpoint
   app.get('/api/health', async (request, reply) => {
     try {
       await db.raw('SELECT 1');
+
       return {
         success: true,
         message: 'To-Do API is running',
@@ -68,6 +103,7 @@ export async function buildApp(opts = {}) {
       };
     } catch (error) {
       reply.status(503);
+
       return {
         success: false,
         message: 'To-Do API is running but database connection failed',

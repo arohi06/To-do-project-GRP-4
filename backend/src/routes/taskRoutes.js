@@ -26,6 +26,7 @@ import {
  * - DELETE /api/tasks/:id  -> Delete a task by ID
  */
 export default async function taskRoutes(fastify, options) {
+  fastify.addHook('preHandler', fastify.authenticate);
   // CREATE
   fastify.post('/', { schema: createTaskSchema }, createTask);
 

@@ -1,3 +1,4 @@
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildApp } from '../src/app.js';
@@ -13,12 +14,47 @@ test('Task REST API Endpoints Test Suite', async (t) => {
 
   let createdTaskId = null;
   let testUserId = null;
+  let authToken = null;
 
-  // Setup: Find an existing user or fallback
-  const existingUser = await db('users').first();
-  if (existingUser) {
-    testUserId = existingUser.id;
-  }
+  // Setup: Log in using the seeded test user
+  const existingUser = await db('users')
+    .where({
+      email: 'alex@example.com',
+      is_active: true,
+      role: 'user'
+    })
+    .first();
+
+  assert.ok(existingUser, 'An active test user must exist');
+
+  testUserId = existingUser.id;
+
+  const loginResponse = await app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: {
+      email: existingUser.email,
+      password: 'Demo@12345'
+    }
+  });
+
+  assert.equal(loginResponse.statusCode, 200, 'Test user login must succeed');
+
+  authToken = JSON.parse(loginResponse.body).token;
+  assert.ok(authToken, 'Login must return a JWT token');
+
+  const authHeaders = {
+    authorization: `Bearer ${authToken}`
+  };
+
+  // Helper for authenticated requests
+  const injectAuth = (options) => app.inject({
+    ...options,
+    headers: {
+      ...options.headers,
+      ...authHeaders
+    }
+  });
 
   await t.test('GET /api/health should return 200 OK and database status', async () => {
     const response = await app.inject({
@@ -32,6 +68,15 @@ test('Task REST API Endpoints Test Suite', async (t) => {
     assert.equal(body.database, 'connected');
   });
 
+  await t.test('GET /api/tasks - should reject unauthenticated requests', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/tasks'
+      });
+
+      assert.equal(response.statusCode, 401);
+    });
+
   // --- POST /api/tasks ---
   await t.test('POST /api/tasks - should successfully create a new task (201 Created)', async () => {
     const payload = {
@@ -41,11 +86,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
       status: 'pending'
     };
 
-    if (testUserId) {
-      payload.user_id = testUserId;
-    }
-
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'POST',
       url: '/api/tasks',
       payload
@@ -58,12 +99,13 @@ test('Task REST API Endpoints Test Suite', async (t) => {
     assert.equal(body.data.title, 'Automated Test Task');
     assert.equal(body.data.priority, 'high');
     assert.equal(body.data.status, 'pending');
+    assert.equal(body.data.user_id, testUserId);
 
     createdTaskId = body.data.id;
   });
 
   await t.test('POST /api/tasks - should fail with 400 when title is missing', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'POST',
       url: '/api/tasks',
       payload: {
@@ -77,7 +119,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('POST /api/tasks - should fail with 400 when title is empty whitespace', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'POST',
       url: '/api/tasks',
       payload: {
@@ -91,7 +133,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('POST /api/tasks - should fail with 400 when status is invalid enum', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'POST',
       url: '/api/tasks',
       payload: {
@@ -104,7 +146,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('POST /api/tasks - should fail with 400 when priority is invalid enum', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'POST',
       url: '/api/tasks',
       payload: {
@@ -117,7 +159,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('POST /api/tasks - should fail with 400 when user_id is not a valid UUID', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'POST',
       url: '/api/tasks',
       payload: {
@@ -131,7 +173,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
 
   // --- GET /api/tasks ---
   await t.test('GET /api/tasks - should return 200 OK with list of tasks', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'GET',
       url: '/api/tasks'
     });
@@ -144,7 +186,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('GET /api/tasks - should filter by status', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'GET',
       url: '/api/tasks?status=pending'
     });
@@ -155,7 +197,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('GET /api/tasks - should search by keyword', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'GET',
       url: '/api/tasks?search=Automated'
     });
@@ -168,7 +210,8 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   // --- GET /api/tasks/:id ---
   await t.test('GET /api/tasks/:id - should return single task (200 OK)', async () => {
     assert.ok(createdTaskId, 'Task ID must be available');
-    const response = await app.inject({
+
+    const response = await injectAuth({
       method: 'GET',
       url: `/api/tasks/${createdTaskId}`
     });
@@ -180,7 +223,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('GET /api/tasks/:id - should return 404 for non-existent UUID', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'GET',
       url: '/api/tasks/00000000-0000-0000-0000-000000000000'
     });
@@ -189,7 +232,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('GET /api/tasks/:id - should return 400 for malformed UUID', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'GET',
       url: '/api/tasks/not-a-uuid'
     });
@@ -199,7 +242,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
 
   // --- PUT /api/tasks/:id ---
   await t.test('PUT /api/tasks/:id - should update task status and title (200 OK)', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'PUT',
       url: `/api/tasks/${createdTaskId}`,
       payload: {
@@ -218,7 +261,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('PUT /api/tasks/:id - should fail with 400 when empty body provided', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'PUT',
       url: `/api/tasks/${createdTaskId}`,
       payload: {}
@@ -228,7 +271,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('PUT /api/tasks/:id - should return 404 for non-existent UUID', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'PUT',
       url: '/api/tasks/00000000-0000-0000-0000-000000000000',
       payload: {
@@ -241,7 +284,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
 
   // --- DELETE /api/tasks/:id ---
   await t.test('DELETE /api/tasks/:id - should delete existing task (200 OK)', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'DELETE',
       url: `/api/tasks/${createdTaskId}`
     });
@@ -252,15 +295,16 @@ test('Task REST API Endpoints Test Suite', async (t) => {
     assert.equal(body.data.id, createdTaskId);
 
     // Verify task is deleted
-    const verifyResponse = await app.inject({
+    const verifyResponse = await injectAuth({
       method: 'GET',
       url: `/api/tasks/${createdTaskId}`
     });
+
     assert.equal(verifyResponse.statusCode, 404);
   });
 
   await t.test('DELETE /api/tasks/:id - should return 404 for non-existent task', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'DELETE',
       url: '/api/tasks/00000000-0000-0000-0000-000000000000'
     });
@@ -269,7 +313,7 @@ test('Task REST API Endpoints Test Suite', async (t) => {
   });
 
   await t.test('DELETE /api/tasks/:id - should return 400 for malformed UUID', async () => {
-    const response = await app.inject({
+    const response = await injectAuth({
       method: 'DELETE',
       url: '/api/tasks/not-a-uuid'
     });

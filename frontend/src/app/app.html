@@ -1,173 +1,998 @@
-<div class="app-container">
-  <header class="app-header">
-    <div>
-      <h1>To-Do Task Manager</h1>
-      <p>Dashboard &amp; Task Management</p>
+
+<!-- SESSION CHECK -->
+<div class="session-loading" *ngIf="isCheckingSession()">
+  <p>Getting things ready...</p>
+</div>
+
+<!-- LOGIN / REGISTRATION PAGE -->
+<section
+  class="login-page"
+  *ngIf="!isCheckingSession() && !authService.currentUser()">
+
+  <div class="login-card">
+    <div class="auth-brand-mark">TF</div>
+    <div class="auth-brand-name">TaskFlow</div>
+    <div class="auth-brand-tag">YOUR PERSONAL WORKSPACE</div>
+
+    <!-- LOGIN FORM -->
+    <ng-container *ngIf="authMode() === 'login'; else registerForm">
+      <div class="auth-heading">
+        <h1>Welcome back!</h1>
+        <p>Sign in to pick up where you left off.</p>
+      </div>
+
+      <form (ngSubmit)="login()">
+        <div class="form-group">
+          <label class="form-label" for="login-email">
+            Email address
+          </label>
+          <input
+            id="login-email"
+            class="form-input"
+            type="email"
+            name="loginEmail"
+            [(ngModel)]="loginEmail"
+            placeholder="you@example.com"
+            autocomplete="username"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">
+            Password
+          </label>
+          <input
+            id="login-password"
+            class="form-input"
+            type="password"
+            name="loginPassword"
+            [(ngModel)]="loginPassword"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required>
+        </div>
+
+        <div class="auth-error" *ngIf="authError()">
+          {{ authError() }}
+        </div>
+
+        <button
+          type="submit"
+          class="auth-submit"
+          [disabled]="isAuthenticating()">
+          {{ isAuthenticating() ? 'Signing in...' : 'Sign In' }}
+        </button>
+      </form>
+
+      <p class="auth-switch">
+        New to TaskFlow?
+        <button
+          type="button"
+          (click)="switchAuthMode('register')">
+          Create an account
+        </button>
+      </p>
+    </ng-container>
+
+    <!-- REGISTRATION FORM -->
+    <ng-template #registerForm>
+      <div class="auth-heading">
+        <h1>Create your account</h1>
+        <p>Start organizing your day, one task at a time.</p>
+      </div>
+
+      <form (ngSubmit)="register()">
+        <div class="form-group">
+          <label class="form-label" for="register-name">
+            Full name
+          </label>
+          <input
+            id="register-name"
+            class="form-input"
+            type="text"
+            name="registerName"
+            [(ngModel)]="registerName"
+            placeholder="Enter your name"
+            autocomplete="name"
+            maxlength="100"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="register-email">
+            Email address
+          </label>
+          <input
+            id="register-email"
+            class="form-input"
+            type="email"
+            name="registerEmail"
+            [(ngModel)]="registerEmail"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="register-password">
+            Password
+          </label>
+          <input
+            id="register-password"
+            class="form-input"
+            type="password"
+            name="registerPassword"
+            [(ngModel)]="registerPassword"
+            placeholder="At least 8 characters"
+            autocomplete="new-password"
+            minlength="8"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirm-password">
+            Confirm password
+          </label>
+          <input
+            id="confirm-password"
+            class="form-input"
+            type="password"
+            name="confirmPassword"
+            [(ngModel)]="confirmPassword"
+            placeholder="Re-enter your password"
+            autocomplete="new-password"
+            required>
+        </div>
+
+        <div class="auth-error" *ngIf="authError()">
+          {{ authError() }}
+        </div>
+
+        <button
+          type="submit"
+          class="auth-submit"
+          [disabled]="isAuthenticating()">
+          {{ isAuthenticating() ? 'Creating account...' : 'Create Account' }}
+        </button>
+      </form>
+
+      <p class="auth-switch">
+        Already have an account?
+        <button
+          type="button"
+          (click)="switchAuthMode('login')">
+          Sign in
+        </button>
+      </p>
+    </ng-template>
+
+    <div class="auth-footer">
+      Your day, organized.
     </div>
-    <span class="badge-live">Frontend Ready</span>
+  </div>
+</section>
+
+<!-- MAIN APPLICATION -->
+<div
+  class="app-wrapper"
+  *ngIf="!isCheckingSession() && authService.currentUser()">
+
+  <!-- NAVIGATION -->
+  <header class="navbar">
+    <div class="brand">
+      <span class="brand-name">TaskFlow</span>
+      <span class="brand-tag">PERSONAL PLANNER</span>
+    </div>
+
+    <nav class="nav-links">
+
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeView() === 'dashboard'"
+        (click)="switchView('dashboard')">
+        Dashboard
+      </button>
+
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeView() === 'tasks'"
+        (click)="switchView('tasks')">
+        My Tasks
+      </button>
+
+      <!-- ADMIN NAVIGATION -->
+      <button
+        *ngIf="authService.currentUser()?.role === 'admin'"
+        type="button"
+        class="nav-link"
+        [class.active]="activeView() === 'admin'"
+        (click)="switchView('admin')">
+        Admin Dashboard
+      </button>
+
+    </nav>
+
+    <div class="navbar-actions">
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="openCreateModal()">
+        + New Task
+      </button>
+
+      <!-- LOGGED-IN USER PROFILE -->
+      <div class="user-profile">
+        <div class="user-details">
+          <strong>{{ authService.currentUser()?.name }}</strong>
+          <span class="role-badge">
+            {{ authService.currentUser()?.role | titlecase }}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="logout()">
+          Log Out
+        </button>
+      </div>
+
+    </div>
   </header>
 
-  <!-- DASHBOARD SUMMARY -->
-  <section class="dashboard-grid">
-    <div class="stat-card total">
-      <span class="stat-label">Total Tasks</span>
-      <strong class="stat-value">{{ totalTasks() }}</strong>
-    </div>
-    <div class="stat-card pending">
-      <span class="stat-label">Pending</span>
-      <strong class="stat-value">{{ pendingTasks() }}</strong>
-    </div>
-    <div class="stat-card progress">
-      <span class="stat-label">In Progress</span>
-      <strong class="stat-value">{{ inProgressTasks() }}</strong>
-    </div>
-    <div class="stat-card completed">
-      <span class="stat-label">Completed</span>
-      <strong class="stat-value">{{ completedTasks() }}</strong>
-    </div>
-  </section>
+  <!-- USER ERROR MESSAGE -->
+  <div class="error-message" *ngIf="errorMessage() && !isModalOpen()">
+    {{ errorMessage() }}
+  </div>
 
-  <!-- MAIN WORKSPACE: ADD/EDIT FORM + TASK LIST -->
-  <div class="main-grid">
-    <!-- ADD / EDIT TASK FORM -->
-    <section class="card form-section">
-      <h2>{{ editingTaskId() !== null ? 'Edit Task' : 'Add New Task' }}</h2>
-      <form (ngSubmit)="onSubmit()">
-        <div class="form-group">
-          <label for="title">Task Title *</label>
-          <input
-            id="title"
-            type="text"
-            name="title"
-            [(ngModel)]="taskForm.title"
-            placeholder="e.g., Complete API integration"
-            required
-          />
-        </div>
+  <!-- ====================================== -->
+  <!-- USER DASHBOARD -->
+  <!-- ====================================== -->
 
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            rows="3"
-            [(ngModel)]="taskForm.description"
-            placeholder="Add details about this task..."
-          ></textarea>
-        </div>
+  <main *ngIf="activeView() === 'dashboard'">
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="priority">Priority</label>
-            <select id="priority" name="priority" [(ngModel)]="taskForm.priority">
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
-          </div>
+    <section class="page-heading">
+      <div>
+        <h1>Welcome back, {{ authService.currentUser()?.name }}!</h1>
+        <p>Here's an overview of your productivity.</p>
+      </div>
 
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status" [(ngModel)]="taskForm.status">
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="due_date">Due Date</label>
-          <input
-            id="due_date"
-            type="date"
-            name="due_date"
-            [(ngModel)]="taskForm.due_date"
-          />
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="!taskForm.title.trim()">
-            {{ editingTaskId() !== null ? 'Update Task' : 'Add Task' }}
-          </button>
-          <button
-            *ngIf="editingTaskId() !== null"
-            type="button"
-            class="btn btn-secondary"
-            (click)="resetForm()"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="openTaskList()">
+        View All Tasks
+      </button>
     </section>
 
-    <!-- TASK LIST -->
-    <section class="card list-section">
-      <div class="list-header">
-        <h2>Task List</h2>
-        <div class="filter-tabs">
-          <button
-            *ngFor="let tab of ['All', 'Pending', 'In Progress', 'Completed']"
-            type="button"
-            [class.active]="filterStatus() === tab"
-            (click)="filterStatus.set(tab)"
-          >
-            {{ tab }}
-          </button>
+    <!-- STATISTICS -->
+    <section class="stat-grid">
+
+      <article class="stat-card stat-card-total">
+        <div class="stat-header">
+          <span class="stat-label">Total Tasks</span>
         </div>
+        <strong class="stat-value">{{ totalTasks() }}</strong>
+        <p class="stat-footer">Tasks in your workspace</p>
+      </article>
+
+      <article class="stat-card stat-card-completed">
+        <div class="stat-header">
+          <span class="stat-label">Completed</span>
+        </div>
+        <strong class="stat-value">{{ completedTasks() }}</strong>
+        <p class="stat-footer">Great work!</p>
+      </article>
+
+      <article class="stat-card stat-card-pending">
+        <div class="stat-header">
+          <span class="stat-label">Pending</span>
+        </div>
+        <strong class="stat-value">{{ pendingTasks() }}</strong>
+        <p class="stat-footer">Still on your list</p>
+      </article>
+
+      <article class="stat-card stat-card-urgent">
+        <div class="stat-header">
+          <span class="stat-label">High Priority</span>
+        </div>
+        <strong class="stat-value">{{ highPriorityTasks() }}</strong>
+        <p class="stat-footer">Needs your attention</p>
+      </article>
+
+    </section>
+
+    <!-- PROGRESS -->
+    <section class="dashboard-progress">
+
+      <div class="progress-heading">
+        <div>
+          <h2>Your Progress</h2>
+          <p>Keep going! Every completed task counts.</p>
+        </div>
+
+        <strong>{{ completionRate() }}%</strong>
       </div>
 
-      <div *ngIf="filteredTasks().length === 0" class="empty-state">
-        No tasks found for "{{ filterStatus() }}". Add a task to get started!
-      </div>
+      <div
+        class="progress-track"
+        role="progressbar"
+        [attr.aria-valuenow]="completionRate()"
+        aria-valuemin="0"
+        aria-valuemax="100">
 
-      <div class="task-list">
         <div
-          *ngFor="let task of filteredTasks()"
-          class="task-item"
-          [class.is-completed]="task.status === 'Completed'"
-        >
-          <div class="task-main">
-            <div class="task-top">
-              <h3>{{ task.title }}</h3>
-              <span class="badge priority-{{ task.priority.toLowerCase() }}">
-                {{ task.priority }}
+          class="progress-fill"
+          [style.width.%]="completionRate()">
+        </div>
+
+      </div>
+
+      <p class="progress-caption">
+        {{ completedTasks() }} of {{ totalTasks() }} tasks completed
+      </p>
+
+    </section>
+
+    <!-- RECENT TASKS -->
+    <section class="dashboard-task-section">
+
+      <div class="section-heading">
+        <div>
+          <h2>Your Tasks</h2>
+          <p>Here's what's on your list right now.</p>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="openTaskList()">
+          View All
+        </button>
+      </div>
+
+      <div *ngIf="isLoading()" class="dashboard-empty">
+        Loading your tasks...
+      </div>
+
+      <div
+        *ngIf="!isLoading() && filteredTasks().length === 0"
+        class="dashboard-empty">
+
+        <h3>Your task list is empty</h3>
+        <p>Create your first task and start organizing your day.</p>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="openCreateModal()">
+          + Create Your First Task
+        </button>
+
+      </div>
+
+      <div class="dashboard-task-list" *ngIf="!isLoading()">
+
+        <article
+          *ngFor="let task of filteredTasks() | slice:0:5"
+          class="dashboard-task-card"
+          [class.is-completed]="task.status === 'completed'">
+
+          <input
+            type="checkbox"
+            class="task-checkbox"
+            [checked]="task.status === 'completed'"
+            [attr.aria-label]="'Mark ' + task.title + ' as ' +
+              (task.status === 'completed' ? 'pending' : 'completed')"
+            (change)="toggleStatus(task)">
+
+          <div class="dashboard-task-content">
+
+            <h3 [class.completed-title]="task.status === 'completed'">
+              {{ task.title }}
+            </h3>
+
+            <p *ngIf="task.description">
+              {{ task.description }}
+            </p>
+
+            <div class="task-meta">
+
+              <span class="badge badge-priority-{{ task.priority }}">
+                {{ task.priority | titlecase }} Priority
               </span>
-              <span class="badge status-{{ task.status.toLowerCase().replace(' ', '-') }}">
-                {{ task.status }}
+
+              <span class="badge badge-status-{{ task.status }}">
+                {{ task.status | titlecase }}
               </span>
+
+              <span class="task-due-date" *ngIf="task.due_date">
+                Due: {{ task.due_date | date:'mediumDate':'UTC' }}
+              </span>
+
             </div>
-            <p class="task-desc" *ngIf="task.description">{{ task.description }}</p>
-            <small class="task-date" *ngIf="task.due_date">Due: {{ task.due_date }}</small>
           </div>
 
           <div class="task-actions">
+
             <button
               type="button"
-              class="btn-sm btn-toggle"
-              (click)="toggleStatus(task)"
-              title="Cycle Status"
-            >
-              Next Status
-            </button>
-            <button
-              type="button"
-              class="btn-sm btn-edit"
-              (click)="editTask(task)"
-            >
+              class="btn btn-sm btn-secondary"
+              (click)="editTask(task)">
               Edit
             </button>
+
             <button
               type="button"
-              class="btn-sm btn-delete"
-              (click)="deleteTask(task.id)"
-            >
+              class="btn btn-sm btn-danger"
+              (click)="deleteTask(task.id)">
               Delete
             </button>
+
           </div>
-        </div>
+
+        </article>
+
       </div>
+
+      <p
+        class="dashboard-task-note"
+        *ngIf="!isLoading() && filteredTasks().length > 5">
+        Showing your first 5 tasks. View all to see the complete list.
+      </p>
+
     </section>
+
+  </main>
+
+  <!-- ====================================== -->
+  <!-- ADMIN DASHBOARD -->
+  <!-- ====================================== -->
+
+  <main *ngIf="activeView() === 'admin'">
+
+    <section class="page-heading">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p>Monitor users and activity across TaskFlow.</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="loadAdminDashboard()"
+        [disabled]="isAdminLoading()">
+        {{ isAdminLoading() ? 'Refreshing...' : 'Refresh Data' }}
+      </button>
+    </section>
+
+    <!-- ADMIN ERROR -->
+    <div class="error-message" *ngIf="adminError()">
+      {{ adminError() }}
+    </div>
+
+    <!-- ADMIN LOADING -->
+    <div class="empty-state" *ngIf="isAdminLoading()">
+      Loading administration data...
+    </div>
+
+    <ng-container *ngIf="!isAdminLoading()">
+
+      <!-- ADMIN STATISTICS -->
+      <section
+        class="stat-grid"
+        *ngIf="adminOverview() as overview">
+
+        <article class="stat-card stat-card-total">
+          <span class="stat-label">Total Users</span>
+          <strong class="stat-value">{{ overview.totalUsers }}</strong>
+          <p class="stat-footer">Registered accounts</p>
+        </article>
+
+        <article class="stat-card stat-card-completed">
+          <span class="stat-label">Active Users</span>
+          <strong class="stat-value">{{ overview.activeUsers }}</strong>
+          <p class="stat-footer">Currently active accounts</p>
+        </article>
+
+        <article class="stat-card stat-card-pending">
+          <span class="stat-label">Total Tasks</span>
+          <strong class="stat-value">{{ overview.totalTasks }}</strong>
+          <p class="stat-footer">Across all users</p>
+        </article>
+
+        <article class="stat-card stat-card-urgent">
+          <span class="stat-label">Completed Tasks</span>
+          <strong class="stat-value">{{ overview.completedTasks }}</strong>
+          <p class="stat-footer">
+            {{ overview.pendingTasks }} tasks still pending
+          </p>
+        </article>
+
+      </section>
+
+      <!-- USER MANAGEMENT -->
+      <section class="dashboard-task-section admin-section">
+
+        <div class="section-heading">
+          <div>
+            <h2>User Management</h2>
+            <p>View and manage registered accounts.</p>
+          </div>
+
+          <span class="admin-count">
+            {{ adminUsers().length }} Users
+          </span>
+        </div>
+
+        <div class="admin-table-wrapper">
+
+          <table class="admin-table">
+
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let user of adminUsers()">
+
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role | titlecase }}</td>
+
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge-status-completed]="user.is_active"
+                    [class.badge-status-pending]="!user.is_active">
+                    {{ user.is_active ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-sm"
+                    [class.btn-danger]="user.is_active"
+                    [class.btn-secondary]="!user.is_active"
+                    [disabled]="
+                      user.role === 'admin' ||
+                      user.id === authService.currentUser()?.id
+                    "
+                    (click)="toggleUserStatus(user)">
+                    {{ user.is_active ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </td>
+
+              </tr>
+
+              <tr *ngIf="adminUsers().length === 0">
+                <td colspan="5">
+                  No registered users found.
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+      <!-- ALL TASKS -->
+      <section class="dashboard-task-section admin-section">
+
+        <div class="section-heading">
+          <div>
+            <h2>All Tasks</h2>
+            <p>Tasks created by users across the application.</p>
+          </div>
+
+          <span class="admin-count">
+            {{ adminTasks().length }} Tasks
+          </span>
+        </div>
+
+        <div class="admin-table-wrapper">
+
+          <table class="admin-table">
+
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Assigned User</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let task of adminTasks()">
+
+                <td>
+                  <strong>{{ task.title }}</strong>
+
+                  <p class="admin-task-description">
+                    {{ task.description || 'No description' }}
+                  </p>
+                </td>
+
+                <td>
+                  {{ task.user_name || 'Unknown' }}
+
+                  <p class="admin-task-description">
+                    {{ task.user_email || '' }}
+                  </p>
+                </td>
+
+                <td>
+                  <span class="badge badge-priority-{{ task.priority }}">
+                    {{ task.priority | titlecase }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge badge-status-{{ task.status }}">
+                    {{ task.status | titlecase }}
+                  </span>
+                </td>
+
+                <td>
+                  {{ task.due_date
+                    ? (task.due_date | date:'mediumDate':'UTC')
+                    : 'Not set' }}
+                </td>
+
+              </tr>
+
+              <tr *ngIf="adminTasks().length === 0">
+                <td colspan="5">No tasks found.</td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </ng-container>
+
+  </main>
+
+  <!-- ====================================== -->
+  <!-- TASK LIST VIEW -->
+  <!-- ====================================== -->
+
+  <main *ngIf="activeView() === 'tasks'">
+
+    <section class="page-heading">
+      <div>
+        <h1>My Tasks</h1>
+        <p>Everything you need to get done, all in one place.</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="openCreateModal()">
+        + New Task
+      </button>
+    </section>
+
+    <!-- SEARCH AND FILTERS -->
+    <section class="task-toolbar">
+
+      <div class="search-box">
+        <input
+          type="search"
+          class="form-input"
+          placeholder="Search your tasks..."
+          aria-label="Search tasks"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)">
+      </div>
+
+      <div class="filter-controls">
+
+        <select
+          class="form-select"
+          aria-label="Filter by status"
+          [ngModel]="filterStatus()"
+          (ngModelChange)="filterStatus.set($event)">
+
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+
+        </select>
+
+        <select
+          class="form-select"
+          aria-label="Filter by priority"
+          [ngModel]="filterPriority()"
+          (ngModelChange)="filterPriority.set($event)">
+
+          <option value="all">All Priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+
+        </select>
+
+      </div>
+
+    </section>
+
+    <!-- LOADING -->
+    <div *ngIf="isLoading()" class="empty-state">
+      Loading your tasks...
+    </div>
+
+    <!-- TASKS -->
+    <section class="task-list" *ngIf="!isLoading()">
+
+      <div *ngIf="filteredTasks().length === 0" class="empty-state">
+
+        <h3>Nothing here yet</h3>
+
+        <p>
+          No tasks match your current search or filters.
+          Try adjusting them or add a new task.
+        </p>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="openCreateModal()">
+          Create Your First Task
+        </button>
+
+      </div>
+
+      <article
+        *ngFor="let task of filteredTasks()"
+        class="task-card"
+        [class.is-completed]="task.status === 'completed'">
+
+        <input
+          type="checkbox"
+          class="task-checkbox"
+          [checked]="task.status === 'completed'"
+          [attr.aria-label]="'Mark ' + task.title + ' as ' +
+            (task.status === 'completed' ? 'pending' : 'completed')"
+          (change)="toggleStatus(task)">
+
+        <div class="task-content">
+
+          <h3 class="task-title">{{ task.title }}</h3>
+
+          <p class="task-desc" *ngIf="task.description">
+            {{ task.description }}
+          </p>
+
+          <div class="task-meta">
+
+            <span class="badge badge-priority-{{ task.priority }}">
+              {{ task.priority | titlecase }} Priority
+            </span>
+
+            <span class="badge badge-status-{{ task.status }}">
+              {{ task.status | titlecase }}
+            </span>
+
+            <span class="task-due-date" *ngIf="task.due_date">
+              Due: {{ task.due_date | date:'mediumDate':'UTC' }}
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="task-actions">
+
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            (click)="editTask(task)">
+            Edit
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-danger"
+            (click)="deleteTask(task.id)">
+            Delete
+          </button>
+
+        </div>
+
+      </article>
+
+    </section>
+
+  </main>
+
+  <!-- ====================================== -->
+  <!-- ADD / EDIT TASK MODAL -->
+  <!-- ====================================== -->
+
+  <div
+    class="modal-backdrop"
+    *ngIf="isModalOpen()"
+    (click)="closeModal()">
+
+    <section
+      class="modal-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="task-modal-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="modal-header">
+
+        <h2 class="modal-title" id="task-modal-title">
+          {{ editingTaskId() !== null
+            ? 'Edit Task'
+            : 'Create a New Task' }}
+        </h2>
+
+        <button
+          type="button"
+          class="modal-close-btn"
+          aria-label="Close modal"
+          (click)="closeModal()">
+          &times;
+        </button>
+
+      </header>
+
+      <form (ngSubmit)="onSubmit()">
+
+        <div class="modal-body">
+
+          <div class="error-message" *ngIf="errorMessage()">
+            {{ errorMessage() }}
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label" for="task-title">
+              Task Title *
+            </label>
+
+            <input
+              id="task-title"
+              class="form-input"
+              type="text"
+              name="title"
+              [(ngModel)]="taskForm.title"
+              placeholder="What needs to get done?"
+              maxlength="255"
+              required>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label" for="task-description">
+              Description
+            </label>
+
+            <textarea
+              id="task-description"
+              class="form-textarea"
+              name="description"
+              [(ngModel)]="taskForm.description"
+              rows="4"
+              placeholder="Add more details about this task...">
+            </textarea>
+
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+
+              <label class="form-label" for="task-priority">
+                Priority
+              </label>
+
+              <select
+                id="task-priority"
+                class="form-select"
+                name="priority"
+                [(ngModel)]="taskForm.priority">
+
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+
+              </select>
+
+            </div>
+
+            <div class="form-group">
+
+              <label class="form-label" for="task-status">
+                Status
+              </label>
+
+              <select
+                id="task-status"
+                class="form-select"
+                name="status"
+                [(ngModel)]="taskForm.status">
+
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label" for="task-due-date">
+              Due Date
+            </label>
+
+            <input
+              id="task-due-date"
+              class="form-input"
+              type="date"
+              name="due_date"
+              [(ngModel)]="taskForm.due_date">
+
+          </div>
+
+        </div>
+
+        <footer class="modal-footer">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="closeModal()"
+            [disabled]="isSaving()">
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!taskForm.title.trim() || isSaving()">
+
+            {{ isSaving()
+              ? 'Saving...'
+              : (editingTaskId() !== null
+                ? 'Update Task'
+                : 'Create Task') }}
+
+          </button>
+
+        </footer>
+
+      </form>
+
+    </section>
+
   </div>
+
 </div>
