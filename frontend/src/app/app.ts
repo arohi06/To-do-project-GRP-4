@@ -64,6 +64,44 @@ export class App implements OnInit {
   isAdminLoading = signal(false);
   adminError = signal('');
 
+  // ADMIN USER-WISE TASK VIEW
+  selectedAdminUserId = signal<string | null>(null);
+
+  adminUserSummaries = computed(() =>
+    this.adminUsers().map(user => {
+      const userTasks = this.adminTasks().filter(
+        task => task.user_id === user.id
+      );
+
+      return {
+        ...user,
+        totalTasks: userTasks.length,
+        completedTasks: userTasks.filter(
+          task => task.status === 'completed'
+        ).length,
+        pendingTasks: userTasks.filter(
+          task => task.status === 'pending'
+        ).length
+      };
+    })
+  );
+
+  selectedAdminUserTasks = computed(() => {
+    const userId = this.selectedAdminUserId();
+
+    if (!userId) return [];
+
+    return this.adminTasks().filter(
+      task => task.user_id === userId
+    );
+  });
+
+  selectedAdminUser = computed(() =>
+    this.adminUsers().find(
+      user => user.id === this.selectedAdminUserId()
+    ) ?? null
+  );
+
   // TASK FORM
   taskForm: Task = this.createEmptyTask();
 
@@ -117,7 +155,7 @@ export class App implements OnInit {
     public authService: AuthService,
     private taskService: TaskService,
     private adminService: AdminService
-  ) {}
+  ) { }
 
   // INITIALIZE APPLICATION
   ngOnInit(): void {
@@ -237,6 +275,7 @@ export class App implements OnInit {
     this.adminUsers.set([]);
     this.adminTasks.set([]);
     this.adminError.set('');
+    this.selectedAdminUserId.set(null);
 
     this.errorMessage.set('');
     this.authError.set('');
@@ -259,7 +298,8 @@ export class App implements OnInit {
       description: '',
       status: 'pending',
       priority: 'medium',
-      due_date: null
+      due_date: null,
+      user_id: undefined
     };
   }
 
@@ -284,13 +324,23 @@ export class App implements OnInit {
     this.activeView.set('tasks');
     this.filterStatus.set('all');
   }
+  // VIEW A SPECIFIC USER'S TASKS
+  viewUserTasks(userId: string): void {
+    this.selectedAdminUserId.set(userId);
+  }
 
+  // RETURN TO ALL USERS
+  clearSelectedUser(): void {
+    this.selectedAdminUserId.set(null);
+  }
   // LOAD USER TASKS
+
+  // LOAD PERSONAL TASKS
   loadTasks(): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.taskService.getTasks().subscribe({
+    this.taskService.getTasks('personal').subscribe({
       next: data => {
         this.tasks.set(data);
         this.isLoading.set(false);
@@ -300,7 +350,6 @@ export class App implements OnInit {
           error.error?.message ||
           'Unable to load tasks. Please check the backend connection.'
         );
-
         this.isLoading.set(false);
       }
     });
@@ -404,6 +453,20 @@ export class App implements OnInit {
   // OPEN CREATE TASK MODAL
   openCreateModal(): void {
     this.resetForm();
+
+    if (this.authService.currentUser()?.role === 'admin') {
+      this.adminService.getUsers().subscribe({
+        next: response => {
+          this.adminUsers.set(response.data);
+        },
+        error: error => {
+          this.errorMessage.set(
+            error.error?.message || 'Unable to load users for task assignment.'
+          );
+        }
+      });
+    }
+
     this.isModalOpen.set(true);
   }
 
@@ -424,7 +487,10 @@ export class App implements OnInit {
       priority: this.taskForm.priority,
       due_date: this.taskForm.due_date
         ? `${this.taskForm.due_date.slice(0, 10)}T00:00:00.000Z`
-        : null
+        : null,
+      ...(this.authService.currentUser()?.role === 'admin'
+        ? { user_id: this.taskForm.user_id || this.authService.currentUser()?.id }
+        : {})
     };
 
     const editId = this.editingTaskId();
@@ -432,9 +498,11 @@ export class App implements OnInit {
     if (editId) {
       this.taskService.updateTask(editId, payload).subscribe({
         next: updated => {
-          this.tasks.update(list =>
-            list.map(task => task.id === editId ? updated : task)
-          );
+          this.loadTasks();
+
+          if (this.authService.currentUser()?.role === 'admin') {
+            this.loadAdminDashboard();
+          }
 
           this.isSaving.set(false);
           this.closeModal();
@@ -449,7 +517,11 @@ export class App implements OnInit {
     } else {
       this.taskService.createTask(payload).subscribe({
         next: created => {
-          this.tasks.update(list => [created, ...list]);
+          this.loadTasks();
+
+          if (this.authService.currentUser()?.role === 'admin') {
+            this.loadAdminDashboard();
+          }
 
           this.isSaving.set(false);
           this.closeModal();
@@ -508,9 +580,15 @@ export class App implements OnInit {
 
     this.taskService.deleteTask(id).subscribe({
       next: () => {
-        this.tasks.update(list =>
+        this.loadTasks();
+
+        this.adminTasks.update(list =>
           list.filter(task => task.id !== id)
         );
+
+        if (this.authService.currentUser()?.role === 'admin') {
+          this.loadAdminDashboard();
+        }
 
         if (this.editingTaskId() === id) {
           this.closeModal();

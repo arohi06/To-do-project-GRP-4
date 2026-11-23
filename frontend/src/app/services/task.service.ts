@@ -33,12 +33,19 @@ interface ApiResponse<T> {
 export class TaskService {
   private apiUrl = 'http://localhost:5000/api/tasks';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // GET tasks from PostgreSQL through the backend
-  getTasks(): Observable<Task[]> {
+  // GET tasks from PostgreSQL through the backend
+  getTasks(scope?: 'personal'): Observable<Task[]> {
+    let params = new HttpParams();
+
+    if (scope === 'personal') {
+      params = params.set('scope', 'personal');
+    }
+
     return this.http
-      .get<ApiResponse<Task[]>>(this.apiUrl)
+      .get<ApiResponse<Task[]>>(this.apiUrl, { params })
       .pipe(map(response => response.data));
   }
 

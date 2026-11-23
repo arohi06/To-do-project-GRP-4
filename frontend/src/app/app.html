@@ -1,13 +1,10 @@
-
 <!-- SESSION CHECK -->
 <div class="session-loading" *ngIf="isCheckingSession()">
   <p>Getting things ready...</p>
 </div>
 
 <!-- LOGIN / REGISTRATION PAGE -->
-<section
-  class="login-page"
-  *ngIf="!isCheckingSession() && !authService.currentUser()">
+<section class="login-page" *ngIf="!isCheckingSession() && !authService.currentUser()">
 
   <div class="login-card">
     <div class="auth-brand-mark">TF</div>
@@ -26,49 +23,30 @@
           <label class="form-label" for="login-email">
             Email address
           </label>
-          <input
-            id="login-email"
-            class="form-input"
-            type="email"
-            name="loginEmail"
-            [(ngModel)]="loginEmail"
-            placeholder="you@example.com"
-            autocomplete="username"
-            required>
+          <input id="login-email" class="form-input" type="email" name="loginEmail" [(ngModel)]="loginEmail"
+            placeholder="you@example.com" autocomplete="username" required>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="login-password">
             Password
           </label>
-          <input
-            id="login-password"
-            class="form-input"
-            type="password"
-            name="loginPassword"
-            [(ngModel)]="loginPassword"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required>
+          <input id="login-password" class="form-input" type="password" name="loginPassword" [(ngModel)]="loginPassword"
+            placeholder="Enter your password" autocomplete="current-password" required>
         </div>
 
         <div class="auth-error" *ngIf="authError()">
           {{ authError() }}
         </div>
 
-        <button
-          type="submit"
-          class="auth-submit"
-          [disabled]="isAuthenticating()">
+        <button type="submit" class="auth-submit" [disabled]="isAuthenticating()">
           {{ isAuthenticating() ? 'Signing in...' : 'Sign In' }}
         </button>
       </form>
 
       <p class="auth-switch">
         New to TaskFlow?
-        <button
-          type="button"
-          (click)="switchAuthMode('register')">
+        <button type="button" (click)="switchAuthMode('register')">
           Create an account
         </button>
       </p>
@@ -86,46 +64,24 @@
           <label class="form-label" for="register-name">
             Full name
           </label>
-          <input
-            id="register-name"
-            class="form-input"
-            type="text"
-            name="registerName"
-            [(ngModel)]="registerName"
-            placeholder="Enter your name"
-            autocomplete="name"
-            maxlength="100"
-            required>
+          <input id="register-name" class="form-input" type="text" name="registerName" [(ngModel)]="registerName"
+            placeholder="Enter your name" autocomplete="name" maxlength="100" required>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="register-email">
             Email address
           </label>
-          <input
-            id="register-email"
-            class="form-input"
-            type="email"
-            name="registerEmail"
-            [(ngModel)]="registerEmail"
-            placeholder="you@example.com"
-            autocomplete="email"
-            required>
+          <input id="register-email" class="form-input" type="email" name="registerEmail" [(ngModel)]="registerEmail"
+            placeholder="you@example.com" autocomplete="email" required>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="register-password">
             Password
           </label>
-          <input
-            id="register-password"
-            class="form-input"
-            type="password"
-            name="registerPassword"
-            [(ngModel)]="registerPassword"
-            placeholder="At least 8 characters"
-            autocomplete="new-password"
-            minlength="8"
+          <input id="register-password" class="form-input" type="password" name="registerPassword"
+            [(ngModel)]="registerPassword" placeholder="At least 8 characters" autocomplete="new-password" minlength="8"
             required>
         </div>
 
@@ -133,34 +89,22 @@
           <label class="form-label" for="confirm-password">
             Confirm password
           </label>
-          <input
-            id="confirm-password"
-            class="form-input"
-            type="password"
-            name="confirmPassword"
-            [(ngModel)]="confirmPassword"
-            placeholder="Re-enter your password"
-            autocomplete="new-password"
-            required>
+          <input id="confirm-password" class="form-input" type="password" name="confirmPassword"
+            [(ngModel)]="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password" required>
         </div>
 
         <div class="auth-error" *ngIf="authError()">
           {{ authError() }}
         </div>
 
-        <button
-          type="submit"
-          class="auth-submit"
-          [disabled]="isAuthenticating()">
+        <button type="submit" class="auth-submit" [disabled]="isAuthenticating()">
           {{ isAuthenticating() ? 'Creating account...' : 'Create Account' }}
         </button>
       </form>
 
       <p class="auth-switch">
         Already have an account?
-        <button
-          type="button"
-          (click)="switchAuthMode('login')">
+        <button type="button" (click)="switchAuthMode('login')">
           Sign in
         </button>
       </p>
@@ -173,9 +117,7 @@
 </section>
 
 <!-- MAIN APPLICATION -->
-<div
-  class="app-wrapper"
-  *ngIf="!isCheckingSession() && authService.currentUser()">
+<div class="app-wrapper" *ngIf="!isCheckingSession() && authService.currentUser()">
 
   <!-- NAVIGATION -->
   <header class="navbar">
@@ -186,29 +128,18 @@
 
     <nav class="nav-links">
 
-      <button
-        type="button"
-        class="nav-link"
-        [class.active]="activeView() === 'dashboard'"
+      <button type="button" class="nav-link" [class.active]="activeView() === 'dashboard'"
         (click)="switchView('dashboard')">
         Dashboard
       </button>
 
-      <button
-        type="button"
-        class="nav-link"
-        [class.active]="activeView() === 'tasks'"
-        (click)="switchView('tasks')">
+      <button type="button" class="nav-link" [class.active]="activeView() === 'tasks'" (click)="switchView('tasks')">
         My Tasks
       </button>
 
       <!-- ADMIN NAVIGATION -->
-      <button
-        *ngIf="authService.currentUser()?.role === 'admin'"
-        type="button"
-        class="nav-link"
-        [class.active]="activeView() === 'admin'"
-        (click)="switchView('admin')">
+      <button *ngIf="authService.currentUser()?.role === 'admin'" type="button" class="nav-link"
+        [class.active]="activeView() === 'admin'" (click)="switchView('admin')">
         Admin Dashboard
       </button>
 
@@ -216,10 +147,7 @@
 
     <div class="navbar-actions">
 
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="openCreateModal()">
+      <button type="button" class="btn btn-primary" (click)="openCreateModal()">
         + New Task
       </button>
 
@@ -232,10 +160,7 @@
           </span>
         </div>
 
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="logout()">
+        <button type="button" class="btn btn-secondary" (click)="logout()">
           Log Out
         </button>
       </div>
@@ -260,10 +185,7 @@
         <p>Here's an overview of your productivity.</p>
       </div>
 
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="openTaskList()">
+      <button type="button" class="btn btn-primary" (click)="openTaskList()">
         View All Tasks
       </button>
     </section>
@@ -317,16 +239,10 @@
         <strong>{{ completionRate() }}%</strong>
       </div>
 
-      <div
-        class="progress-track"
-        role="progressbar"
-        [attr.aria-valuenow]="completionRate()"
-        aria-valuemin="0"
+      <div class="progress-track" role="progressbar" [attr.aria-valuenow]="completionRate()" aria-valuemin="0"
         aria-valuemax="100">
 
-        <div
-          class="progress-fill"
-          [style.width.%]="completionRate()">
+        <div class="progress-fill" [style.width.%]="completionRate()">
         </div>
 
       </div>
@@ -346,10 +262,7 @@
           <p>Here's what's on your list right now.</p>
         </div>
 
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="openTaskList()">
+        <button type="button" class="btn btn-secondary" (click)="openTaskList()">
           View All
         </button>
       </div>
@@ -358,17 +271,12 @@
         Loading your tasks...
       </div>
 
-      <div
-        *ngIf="!isLoading() && filteredTasks().length === 0"
-        class="dashboard-empty">
+      <div *ngIf="!isLoading() && filteredTasks().length === 0" class="dashboard-empty">
 
         <h3>Your task list is empty</h3>
         <p>Create your first task and start organizing your day.</p>
 
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="openCreateModal()">
+        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
           + Create Your First Task
         </button>
 
@@ -376,18 +284,11 @@
 
       <div class="dashboard-task-list" *ngIf="!isLoading()">
 
-        <article
-          *ngFor="let task of filteredTasks() | slice:0:5"
-          class="dashboard-task-card"
+        <article *ngFor="let task of filteredTasks() | slice:0:5" class="dashboard-task-card"
           [class.is-completed]="task.status === 'completed'">
 
-          <input
-            type="checkbox"
-            class="task-checkbox"
-            [checked]="task.status === 'completed'"
-            [attr.aria-label]="'Mark ' + task.title + ' as ' +
-              (task.status === 'completed' ? 'pending' : 'completed')"
-            (change)="toggleStatus(task)">
+          <input type="checkbox" class="task-checkbox" [checked]="task.status === 'completed'" [attr.aria-label]="'Mark ' + task.title + ' as ' +
+              (task.status === 'completed' ? 'pending' : 'completed')" (change)="toggleStatus(task)">
 
           <div class="dashboard-task-content">
 
@@ -418,17 +319,11 @@
 
           <div class="task-actions">
 
-            <button
-              type="button"
-              class="btn btn-sm btn-secondary"
-              (click)="editTask(task)">
+            <button type="button" class="btn btn-sm btn-secondary" (click)="editTask(task)">
               Edit
             </button>
 
-            <button
-              type="button"
-              class="btn btn-sm btn-danger"
-              (click)="deleteTask(task.id)">
+            <button type="button" class="btn btn-sm btn-danger" (click)="deleteTask(task.id)">
               Delete
             </button>
 
@@ -438,9 +333,7 @@
 
       </div>
 
-      <p
-        class="dashboard-task-note"
-        *ngIf="!isLoading() && filteredTasks().length > 5">
+      <p class="dashboard-task-note" *ngIf="!isLoading() && filteredTasks().length > 5">
         Showing your first 5 tasks. View all to see the complete list.
       </p>
 
@@ -460,11 +353,7 @@
         <p>Monitor users and activity across TaskFlow.</p>
       </div>
 
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="loadAdminDashboard()"
-        [disabled]="isAdminLoading()">
+      <button type="button" class="btn btn-primary" (click)="loadAdminDashboard()" [disabled]="isAdminLoading()">
         {{ isAdminLoading() ? 'Refreshing...' : 'Refresh Data' }}
       </button>
     </section>
@@ -482,9 +371,7 @@
     <ng-container *ngIf="!isAdminLoading()">
 
       <!-- ADMIN STATISTICS -->
-      <section
-        class="stat-grid"
-        *ngIf="adminOverview() as overview">
+      <section class="stat-grid" *ngIf="adminOverview() as overview">
 
         <article class="stat-card stat-card-total">
           <span class="stat-label">Total Users</span>
@@ -551,25 +438,18 @@
                 <td>{{ user.role | titlecase }}</td>
 
                 <td>
-                  <span
-                    class="badge"
-                    [class.badge-status-completed]="user.is_active"
+                  <span class="badge" [class.badge-status-completed]="user.is_active"
                     [class.badge-status-pending]="!user.is_active">
                     {{ user.is_active ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
 
                 <td>
-                  <button
-                    type="button"
-                    class="btn btn-sm"
-                    [class.btn-danger]="user.is_active"
-                    [class.btn-secondary]="!user.is_active"
-                    [disabled]="
+                  <button type="button" class="btn btn-sm" [class.btn-danger]="user.is_active"
+                    [class.btn-secondary]="!user.is_active" [disabled]="
                       user.role === 'admin' ||
                       user.id === authService.currentUser()?.id
-                    "
-                    (click)="toggleUserStatus(user)">
+                    " (click)="toggleUserStatus(user)">
                     {{ user.is_active ? 'Deactivate' : 'Activate' }}
                   </button>
                 </td>
@@ -589,6 +469,131 @@
         </div>
 
       </section>
+
+      <!-- USER-WISE TASK OVERVIEW -->
+      <section class="dashboard-task-section admin-section">
+
+        <!-- SELECTED USER TASK DETAILS -->
+        <div *ngIf="selectedAdminUser() as selectedUser; else userSummaryList">
+
+          <div class="section-heading">
+            <div>
+              <h2>{{ selectedUser.name }}'s Tasks</h2>
+              <p>{{ selectedUser.email }}</p>
+            </div>
+
+            <button type="button" class="btn btn-secondary" (click)="clearSelectedUser()">
+              Back to All Users
+            </button>
+          </div>
+
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Description</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let task of selectedAdminUserTasks()">
+                  <td><strong>{{ task.title }}</strong></td>
+                  <td>{{ task.description || 'No description' }}</td>
+                  <td>
+                    <span class="badge badge-priority-{{ task.priority }}">
+                      {{ task.priority | titlecase }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge badge-status-{{ task.status }}">
+                      {{ task.status | titlecase }}
+                    </span>
+                  </td>
+                  <td>
+                    {{ task.due_date
+                    ? (task.due_date | date:'mediumDate':'UTC')
+                    : 'Not set' }}
+                  </td>
+                  <td>
+                    <div class="task-actions">
+                      <button type="button" class="btn btn-sm btn-secondary" (click)="editTask(task)">
+                        Edit
+                      </button>
+
+                      <button type="button" class="btn btn-sm btn-danger" (click)="deleteTask(task.id)">
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr *ngIf="selectedAdminUserTasks().length === 0">
+                  <td colspan="6">This user has no tasks yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- ALL USER SUMMARIES -->
+        <ng-template #userSummaryList>
+
+          <div class="section-heading">
+            <div>
+              <h2>User Task Overview</h2>
+              <p>View task progress for each registered user.</p>
+            </div>
+
+            <span class="admin-count">
+              {{ adminUserSummaries().length }} Users
+            </span>
+          </div>
+
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Total Tasks</th>
+                  <th>Completed</th>
+                  <th>Pending</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let user of adminUserSummaries()">
+                  <td>
+                    <strong>{{ user.name }}</strong>
+                    <p class="admin-task-description">{{ user.email }}</p>
+                  </td>
+                  <td>{{ user.totalTasks }}</td>
+                  <td>{{ user.completedTasks }}</td>
+                  <td>{{ user.pendingTasks }}</td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-primary" (click)="viewUserTasks(user.id)">
+                      View Tasks
+                    </button>
+                  </td>
+                </tr>
+
+                <tr *ngIf="adminUserSummaries().length === 0">
+                  <td colspan="5">No users found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </ng-template>
+
+      </section>
+
 
       <!-- ALL TASKS -->
       <section class="dashboard-task-section admin-section">
@@ -615,6 +620,7 @@
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Due Date</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -652,14 +658,24 @@
 
                 <td>
                   {{ task.due_date
-                    ? (task.due_date | date:'mediumDate':'UTC')
-                    : 'Not set' }}
+                  ? (task.due_date | date:'mediumDate':'UTC')
+                  : 'Not set' }}
+                </td>
+                <td>
+                  <div class="task-actions">
+                    <button type="button" class="btn btn-sm btn-secondary" (click)="editTask(task)">
+                      Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" (click)="deleteTask(task.id)">
+                      Delete
+                    </button>
+                  </div>
                 </td>
 
               </tr>
 
               <tr *ngIf="adminTasks().length === 0">
-                <td colspan="5">No tasks found.</td>
+                <td colspan="6">No tasks found.</td>
               </tr>
 
             </tbody>
@@ -686,10 +702,7 @@
         <p>Everything you need to get done, all in one place.</p>
       </div>
 
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="openCreateModal()">
+      <button type="button" class="btn btn-primary" (click)="openCreateModal()">
         + New Task
       </button>
     </section>
@@ -698,21 +711,13 @@
     <section class="task-toolbar">
 
       <div class="search-box">
-        <input
-          type="search"
-          class="form-input"
-          placeholder="Search your tasks..."
-          aria-label="Search tasks"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event)">
+        <input type="search" class="form-input" placeholder="Search your tasks..." aria-label="Search tasks"
+          [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)">
       </div>
 
       <div class="filter-controls">
 
-        <select
-          class="form-select"
-          aria-label="Filter by status"
-          [ngModel]="filterStatus()"
+        <select class="form-select" aria-label="Filter by status" [ngModel]="filterStatus()"
           (ngModelChange)="filterStatus.set($event)">
 
           <option value="all">All Statuses</option>
@@ -721,10 +726,7 @@
 
         </select>
 
-        <select
-          class="form-select"
-          aria-label="Filter by priority"
-          [ngModel]="filterPriority()"
+        <select class="form-select" aria-label="Filter by priority" [ngModel]="filterPriority()"
           (ngModelChange)="filterPriority.set($event)">
 
           <option value="all">All Priorities</option>
@@ -755,27 +757,17 @@
           Try adjusting them or add a new task.
         </p>
 
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="openCreateModal()">
+        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
           Create Your First Task
         </button>
 
       </div>
 
-      <article
-        *ngFor="let task of filteredTasks()"
-        class="task-card"
+      <article *ngFor="let task of filteredTasks()" class="task-card"
         [class.is-completed]="task.status === 'completed'">
 
-        <input
-          type="checkbox"
-          class="task-checkbox"
-          [checked]="task.status === 'completed'"
-          [attr.aria-label]="'Mark ' + task.title + ' as ' +
-            (task.status === 'completed' ? 'pending' : 'completed')"
-          (change)="toggleStatus(task)">
+        <input type="checkbox" class="task-checkbox" [checked]="task.status === 'completed'" [attr.aria-label]="'Mark ' + task.title + ' as ' +
+            (task.status === 'completed' ? 'pending' : 'completed')" (change)="toggleStatus(task)">
 
         <div class="task-content">
 
@@ -805,17 +797,11 @@
 
         <div class="task-actions">
 
-          <button
-            type="button"
-            class="btn btn-sm btn-secondary"
-            (click)="editTask(task)">
+          <button type="button" class="btn btn-sm btn-secondary" (click)="editTask(task)">
             Edit
           </button>
 
-          <button
-            type="button"
-            class="btn btn-sm btn-danger"
-            (click)="deleteTask(task.id)">
+          <button type="button" class="btn btn-sm btn-danger" (click)="deleteTask(task.id)">
             Delete
           </button>
 
@@ -831,31 +817,20 @@
   <!-- ADD / EDIT TASK MODAL -->
   <!-- ====================================== -->
 
-  <div
-    class="modal-backdrop"
-    *ngIf="isModalOpen()"
-    (click)="closeModal()">
+  <div class="modal-backdrop" *ngIf="isModalOpen()" (click)="closeModal()">
 
-    <section
-      class="modal-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="task-modal-title"
+    <section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="task-modal-title"
       (click)="$event.stopPropagation()">
 
       <header class="modal-header">
 
         <h2 class="modal-title" id="task-modal-title">
           {{ editingTaskId() !== null
-            ? 'Edit Task'
-            : 'Create a New Task' }}
+          ? 'Edit Task'
+          : 'Create a New Task' }}
         </h2>
 
-        <button
-          type="button"
-          class="modal-close-btn"
-          aria-label="Close modal"
-          (click)="closeModal()">
+        <button type="button" class="modal-close-btn" aria-label="Close modal" (click)="closeModal()">
           &times;
         </button>
 
@@ -875,15 +850,8 @@
               Task Title *
             </label>
 
-            <input
-              id="task-title"
-              class="form-input"
-              type="text"
-              name="title"
-              [(ngModel)]="taskForm.title"
-              placeholder="What needs to get done?"
-              maxlength="255"
-              required>
+            <input id="task-title" class="form-input" type="text" name="title" [(ngModel)]="taskForm.title"
+              placeholder="What needs to get done?" maxlength="255" required>
 
           </div>
 
@@ -893,14 +861,29 @@
               Description
             </label>
 
-            <textarea
-              id="task-description"
-              class="form-textarea"
-              name="description"
-              [(ngModel)]="taskForm.description"
-              rows="4"
-              placeholder="Add more details about this task...">
+            <textarea id="task-description" class="form-textarea" name="description" [(ngModel)]="taskForm.description"
+              rows="4" placeholder="Add more details about this task...">
             </textarea>
+
+          </div>
+
+          <!-- ADMIN TASK ASSIGNMENT -->
+          <div class="form-group" *ngIf="authService.currentUser()?.role === 'admin'">
+
+            <label class="form-label" for="task-assignee">
+              Assign Task To
+            </label>
+
+            <select id="task-assignee" class="form-select" name="user_id" [(ngModel)]="taskForm.user_id" required>
+
+              <option value="">Select a user</option>
+
+              <option *ngFor="let user of adminUsers()" [value]="user.id" [disabled]="!user.is_active">
+                {{ user.name }} ({{ user.email }})
+                {{ user.is_active ? '' : '- Inactive' }}
+              </option>
+
+            </select>
 
           </div>
 
@@ -912,11 +895,7 @@
                 Priority
               </label>
 
-              <select
-                id="task-priority"
-                class="form-select"
-                name="priority"
-                [(ngModel)]="taskForm.priority">
+              <select id="task-priority" class="form-select" name="priority" [(ngModel)]="taskForm.priority">
 
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -932,11 +911,7 @@
                 Status
               </label>
 
-              <select
-                id="task-status"
-                class="form-select"
-                name="status"
-                [(ngModel)]="taskForm.status">
+              <select id="task-status" class="form-select" name="status" [(ngModel)]="taskForm.status">
 
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
@@ -953,12 +928,7 @@
               Due Date
             </label>
 
-            <input
-              id="task-due-date"
-              class="form-input"
-              type="date"
-              name="due_date"
-              [(ngModel)]="taskForm.due_date">
+            <input id="task-due-date" class="form-input" type="date" name="due_date" [(ngModel)]="taskForm.due_date">
 
           </div>
 
@@ -966,24 +936,17 @@
 
         <footer class="modal-footer">
 
-          <button
-            type="button"
-            class="btn btn-secondary"
-            (click)="closeModal()"
-            [disabled]="isSaving()">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving()">
             Cancel
           </button>
 
-          <button
-            type="submit"
-            class="btn btn-primary"
-            [disabled]="!taskForm.title.trim() || isSaving()">
+          <button type="submit" class="btn btn-primary" [disabled]="!taskForm.title.trim() || isSaving()">
 
             {{ isSaving()
-              ? 'Saving...'
-              : (editingTaskId() !== null
-                ? 'Update Task'
-                : 'Create Task') }}
+            ? 'Saving...'
+            : (editingTaskId() !== null
+            ? 'Update Task'
+            : 'Create Task') }}
 
           </button>
 

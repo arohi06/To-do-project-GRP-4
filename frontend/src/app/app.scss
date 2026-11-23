@@ -1347,3 +1347,141 @@ body::-webkit-scrollbar-thumb:hover {
     padding: 16px;
   }
 }
+
+/* ==========================================
+   TASKFLOW UI IMPROVEMENTS – FULL SCREEN
+   ========================================== */
+
+/* Full available application space */
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.app-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  padding: 0 3.5% 48px;
+}
+
+/* Full-width navigation */
+.navbar {
+  margin-left: -3.5%;
+  margin-right: -3.5%;
+  padding-left: 3.5%;
+  padding-right: 3.5%;
+  width: calc(100% + 7%);
+}
+
+/* Remove the desktop content width restriction */
+main {
+  width: 100%;
+  max-width: none;
+  min-height: calc(100vh - 82px);
+  margin: 0 auto;
+  padding-top: 36px;
+  padding-bottom: 40px;
+}
+
+/* Better use of available dashboard space */
+.stat-grid {
+  gap: 22px;
+}
+
+.stat-card {
+  min-width: 0;
+}
+
+.dashboard-progress,
+.dashboard-actions,
+.dashboard-task-section {
+  width: 100%;
+}
+
+/* Improve admin management sections */
+.admin-section {
+  width: 100%;
+  margin-top: 30px;
+}
+
+.admin-table-wrapper {
+  width: 100%;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 750px;
+}
+
+.admin-table th {
+  padding: 17px 16px;
+}
+
+.admin-table td {
+  padding: 17px 16px;
+}
+
+/* Better desktop task layout */
+.task-toolbar {
+  width: 100%;
+}
+
+.task-list {
+  width: 100%;
+}
+
+.task-card {
+  width: 100%;
+}
+
+/* Larger desktop spacing */
+@media (min-width: 1600px) {
+  .app-wrapper {
+    padding-left: 4%;
+    padding-right: 4%;
+  }
+
+  .navbar {
+    margin-left: -4%;
+    margin-right: -4%;
+    padding-left: 4%;
+    padding-right: 4%;
+    width: calc(100% + 8%);
+  }
+
+  main {
+    padding-top: 42px;
+  }
+
+  .stat-grid {
+    gap: 26px;
+  }
+
+  .stat-card {
+    padding: 28px;
+  }
+}
+
+/* Preserve tablet and mobile layout */
+@media (max-width: 768px) {
+  .app-wrapper {
+    padding: 0 20px 35px;
+  }
+
+  .navbar {
+    width: calc(100% + 40px);
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  main {
+    min-height: auto;
+  }
+}
+
