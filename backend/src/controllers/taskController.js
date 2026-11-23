@@ -104,6 +104,7 @@ export async function getTasks(request, reply) {
     status,
     priority,
     user_id,
+    scope,
     search,
     limit = 50,
     offset = 0
@@ -117,13 +118,8 @@ export async function getTasks(request, reply) {
       'users.email as user_email'
     );
 
-  // Enforce task ownership for regular users.
-  if (currentUser.role !== 'admin') {
-    query = query.where('tasks.user_id', currentUser.id);
-  } else if (user_id) {
-    // Admins may filter tasks by a particular user.
-    query = query.where('tasks.user_id', user_id);
-  }
+  // Always show only the logged-in user's tasks on the normal tasks endpoint.
+query = query.where('tasks.user_id', currentUser.id);
 
   if (status) {
     query = query.where('tasks.status', status);
