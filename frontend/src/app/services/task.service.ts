@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
@@ -23,8 +22,27 @@ export interface Task {
 interface ApiResponse<T> {
   success: boolean;
   message?: string;
+  total?: number;
   count?: number;
   data: T;
+}
+
+export interface DueTaskItem {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  due_date: string;
+  is_overdue: boolean;
+}
+
+// Response of GET /api/tasks/due
+export interface DueTasksResponse {
+  success: boolean;
+  total: number;
+  overdueCount: number;
+  dueTodayCount: number;
+  data: DueTaskItem[];
 }
 
 @Injectable({
@@ -33,9 +51,8 @@ interface ApiResponse<T> {
 export class TaskService {
   private apiUrl = 'http://localhost:5000/api/tasks';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  // GET tasks from PostgreSQL through the backend
   // GET tasks from PostgreSQL through the backend
   getTasks(scope?: 'personal'): Observable<Task[]> {
     let params = new HttpParams();
@@ -46,7 +63,12 @@ export class TaskService {
 
     return this.http
       .get<ApiResponse<Task[]>>(this.apiUrl, { params })
-      .pipe(map(response => response.data));
+      .pipe(map(response => response.data ?? []));
+  }
+
+  // GET the logged-in user's due and overdue tasks
+  getDueTasks(): Observable<DueTasksResponse> {
+    return this.http.get<DueTasksResponse>(`${this.apiUrl}/due`);
   }
 
   // CREATE a task
@@ -64,9 +86,9 @@ export class TaskService {
   }
 
   // DELETE a task
-  deleteTask(id: string): Observable<Task> {
+  deleteTask(id: string): Observable<void> {
     return this.http
-      .delete<ApiResponse<Task>>(`${this.apiUrl}/${id}`)
-      .pipe(map(response => response.data));
+      .delete<ApiResponse<null>>(`${this.apiUrl}/${id}`)
+      .pipe(map(() => void 0));
   }
 }

@@ -1,23 +1,33 @@
-
 import db from '../database/knex.js';
 
 /**
- * Retrieve the currently authenticated, active user.
- * The database is checked so that outdated JWT role information
- * cannot grant permissions after an account is changed or disabled.
+ * Resolves the authenticated user from the request (set by fastify.authenticate).
  */
 async function getAuthenticatedUser(request) {
-  return db('users')
-    .select('id', 'name', 'email', 'role', 'is_active')
-    .where({
-      id: request.user.sub,
-      is_active: true
-    })
+  const rawAuth = request.user || request.authUser || request.session?.user || null;
+  const authUser = rawAuth?.user || rawAuth;
+
+  if (!authUser) {
+    return null;
+  }
+
+  const userId = authUser.id ?? authUser.userId ?? authUser.sub;
+
+  if (!userId) {
+    console.warn('Authenticated user object missing id:', authUser);
+    return null;
+  }
+
+  const user = await db('users')
+    .select('id')
+    .where('id', userId)
     .first();
+
+  return user || null;
 }
 
 /**
- * CREATE a new task
+ * CREATE a new task for the logged-in user.
  * POST /api/tasks
  */
 export async function createTask(request, reply) {
@@ -30,65 +40,46 @@ export async function createTask(request, reply) {
     });
   }
 
-  const {
-    title,
-    description,
-    status,
-    priority,
-    due_date,
-    user_id
-  } = request.body;
+  const { title, description = null, status = 'pending', priority = 'medium', due_date = null } = request.body || {};
 
-  if (!title || !title.trim()) {
+  if (!title || typeof title !== 'string' || !title.trim()) {
     return reply.code(400).send({
-      statusCode: 400,
-      error: 'Bad Request',
-      message: 'Title is required and cannot be empty or whitespace only'
+      success: false,
+      message: 'Task title is required.'
     });
   }
 
-  // Regular users can create tasks only for themselves.
-  // Administrators may assign a task to another active user.
-  let assignedUserId = currentUser.id;
+  try {
+    const [createdTask] = await db('tasks')
+      .insert({
+        user_id: currentUser.id,
+        title: title.trim(),
+        description,
+        status,
+        priority,
+        due_date
+      })
+      .returning(['id', 'title', 'description', 'status', 'priority', 'due_date']);
 
-  if (currentUser.role === 'admin' && user_id) {
-    const targetUser = await db('users')
-      .where({ id: user_id, is_active: true })
-      .first();
-
-    if (!targetUser) {
-      return reply.code(400).send({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'The selected user does not exist or is inactive.'
-      });
-    }
-
-    assignedUserId = targetUser.id;
+    return reply.code(201).send({
+      success: true,
+      message: 'Task created successfully.',
+      data: createdTask
+    });
+  } catch (error) {
+    console.error('createTask error:', error);
+    request.log?.error(error);
+    return reply.code(500).send({
+      success: false,
+      message: 'Failed to create task.',
+      error: error.message
+    });
   }
-
-  const [newTask] = await db('tasks')
-    .insert({
-      user_id: assignedUserId,
-      title: title.trim(),
-      description: description ?? null,
-      status: status || 'pending',
-      priority: priority || 'medium',
-      due_date: due_date ?? null
-    })
-    .returning('*');
-
-  return reply.code(201).send({
-    success: true,
-    message: 'Task created successfully',
-    data: newTask
-  });
 }
 
 /**
- * READ tasks with filtering, searching and pagination.
- * Regular users see only their own tasks.
- * Administrators can see all users' tasks.
+ * READ all tasks belonging to the logged-in user (with optional status/priority filters).
+ * GET /api/tasks
  */
 export async function getTasks(request, reply) {
   const currentUser = await getAuthenticatedUser(request);
@@ -100,59 +91,95 @@ export async function getTasks(request, reply) {
     });
   }
 
-  const {
-    status,
-    priority,
-    user_id,
-    scope,
-    search,
-    limit = 50,
-    offset = 0
-  } = request.query;
+  const { status, priority } = request.query || {};
 
-  let query = db('tasks')
-    .leftJoin('users', 'tasks.user_id', 'users.id')
-    .select(
-      'tasks.*',
-      'users.name as user_name',
-      'users.email as user_email'
-    );
+  try {
+    let query = db('tasks')
+      .select('*')
+      .where('user_id', currentUser.id);
 
-  // Always show only the logged-in user's tasks on the normal tasks endpoint.
-query = query.where('tasks.user_id', currentUser.id);
+    if (status) {
+      query = query.where('status', status);
+    }
 
-  if (status) {
-    query = query.where('tasks.status', status);
-  }
+    if (priority) {
+      query = query.where('priority', priority);
+    }
 
-  if (priority) {
-    query = query.where('tasks.priority', priority);
-  }
+    const tasks = await query;
 
-  if (search && search.trim()) {
-    const term = `%${search.trim()}%`;
-
-    query = query.where(builder => {
-      builder
-        .whereILike('tasks.title', term)
-        .orWhereILike('tasks.description', term);
+    return reply.code(200).send({
+      success: true,
+      total: tasks.length,
+      data: tasks
+    });
+  } catch (error) {
+    console.error('getTasks error:', error);
+    request.log?.error(error);
+    return reply.code(500).send({
+      success: false,
+      message: 'Failed to fetch tasks.',
+      error: error.message
     });
   }
-
-  const tasks = await query
-    .orderBy('tasks.created_at', 'desc')
-    .limit(limit)
-    .offset(offset);
-
-  return reply.code(200).send({
-    success: true,
-    count: tasks.length,
-    data: tasks
-  });
 }
 
 /**
- * READ a single task by ID.
+ * READ the logged-in user's due and overdue tasks.
+ * GET /api/tasks/due
+ */
+export async function getDueTasks(request, reply) {
+  const currentUser = await getAuthenticatedUser(request);
+
+  if (!currentUser) {
+    return reply.code(401).send({
+      success: false,
+      message: 'User account not found or inactive.'
+    });
+  }
+
+  const FINISHED_STATUS = 'completed';
+
+  try {
+    const tasks = await db('tasks')
+      .select(
+        '*',
+        db.raw('(due_date::date < CURRENT_DATE) as is_overdue')
+      )
+      .where('user_id', currentUser.id)
+      .whereNot('status', FINISHED_STATUS)
+      .whereNotNull('due_date')
+      .whereRaw('due_date::date <= CURRENT_DATE')
+      .orderBy('due_date', 'asc');
+
+    const normalizedTasks = tasks.map((task) => ({
+      ...task,
+      is_overdue: Boolean(task.is_overdue)
+    }));
+
+    const overdueCount = normalizedTasks.filter((t) => t.is_overdue).length;
+
+    return reply.code(200).send({
+      success: true,
+      total: normalizedTasks.length,
+      overdueCount,
+      dueTodayCount: normalizedTasks.length - overdueCount,
+      data: normalizedTasks
+    });
+  } catch (error) {
+    console.error('getDueTasks error:', error);
+    request.log?.error(error);
+    return reply.code(500).send({
+      success: false,
+      message: 'Failed to fetch due tasks.',
+      error: error.message
+    });
+  }
+}
+
+/**
+ * READ a single task by ID for the logged-in user.
+ * GET /api/tasks/:id
  */
 export async function getTaskById(request, reply) {
   const currentUser = await getAuthenticatedUser(request);
@@ -164,39 +191,49 @@ export async function getTaskById(request, reply) {
     });
   }
 
-  const { id } = request.params;
+  const { id } = request.params || {};
 
-  let query = db('tasks')
-    .leftJoin('users', 'tasks.user_id', 'users.id')
-    .select(
-      'tasks.*',
-      'users.name as user_name',
-      'users.email as user_email'
-    )
-    .where('tasks.id', id);
-
-  if (currentUser.role !== 'admin') {
-    query = query.where('tasks.user_id', currentUser.id);
-  }
-
-  const task = await query.first();
-
-  if (!task) {
-    return reply.code(404).send({
-      statusCode: 404,
-      error: 'Not Found',
-      message: `Task with id "${id}" not found`
+  if (!id) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Task ID is required.'
     });
   }
 
-  return reply.code(200).send({
-    success: true,
-    data: task
-  });
+  try {
+    const task = await db('tasks')
+      .select('*')
+      .where({
+        id,
+        user_id: currentUser.id
+      })
+      .first();
+
+    if (!task) {
+      return reply.code(404).send({
+        success: false,
+        message: 'Task not found.'
+      });
+    }
+
+    return reply.code(200).send({
+      success: true,
+      data: task
+    });
+  } catch (error) {
+    console.error('getTaskById error:', error);
+    request.log?.error(error);
+    return reply.code(500).send({
+      success: false,
+      message: 'Failed to fetch task.',
+      error: error.message
+    });
+  }
 }
 
 /**
- * UPDATE an existing task.
+ * UPDATE an existing task belonging to the logged-in user.
+ * PUT / PATCH /api/tasks/:id
  */
 export async function updateTask(request, reply) {
   const currentUser = await getAuthenticatedUser(request);
@@ -208,115 +245,75 @@ export async function updateTask(request, reply) {
     });
   }
 
-  const { id } = request.params;
-  const updates = request.body;
+  const { id } = request.params || {};
 
-  if (!updates || Object.keys(updates).length === 0) {
+  if (!id) {
     return reply.code(400).send({
-      statusCode: 400,
-      error: 'Bad Request',
-      message: 'At least one field must be provided to update'
+      success: false,
+      message: 'Task ID is required.'
     });
   }
 
-  if (updates.title !== undefined) {
-    if (typeof updates.title !== 'string' || !updates.title.trim()) {
+  const { title, description, status, priority, due_date } = request.body || {};
+  const updates = {};
+
+  if (title !== undefined) {
+    if (typeof title !== 'string' || !title.trim()) {
       return reply.code(400).send({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Title cannot be empty or whitespace only'
+        success: false,
+        message: 'Task title cannot be empty.'
       });
     }
+    updates.title = title.trim();
   }
 
-  // Find the task while enforcing ownership.
-  let taskQuery = db('tasks').where({ id });
+  if (description !== undefined) updates.description = description;
+  if (status !== undefined) updates.status = status;
+  if (priority !== undefined) updates.priority = priority;
+  if (due_date !== undefined) updates.due_date = due_date;
 
-  if (currentUser.role !== 'admin') {
-    taskQuery = taskQuery.where('user_id', currentUser.id);
-  }
-
-  const existingTask = await taskQuery.first();
-
-  if (!existingTask) {
-    return reply.code(404).send({
-      statusCode: 404,
-      error: 'Not Found',
-      message: `Task with id "${id}" not found`
+  if (Object.keys(updates).length === 0) {
+    return reply.code(400).send({
+      success: false,
+      message: 'At least one field is required to update.'
     });
   }
 
-  const updateData = {
-    updated_at: db.fn.now()
-  };
-
-  if (updates.title !== undefined) {
-    updateData.title = updates.title.trim();
-  }
-
-  if (updates.description !== undefined) {
-    updateData.description = updates.description;
-  }
-
-  if (updates.status !== undefined) {
-    updateData.status = updates.status;
-  }
-
-  if (updates.priority !== undefined) {
-    updateData.priority = updates.priority;
-  }
-
-  if (updates.due_date !== undefined) {
-    updateData.due_date = updates.due_date;
-  }
-
-  // Only administrators can reassign a task to another user.
-  if (updates.user_id !== undefined && currentUser.role === 'admin') {
-    const targetUser = await db('users')
+  try {
+    const [updatedTask] = await db('tasks')
       .where({
-        id: updates.user_id,
-        is_active: true
+        id,
+        user_id: currentUser.id
       })
-      .first();
+      .update(updates)
+      .returning('*');
 
-    if (!targetUser) {
-      return reply.code(400).send({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'The selected user does not exist or is inactive.'
+    if (!updatedTask) {
+      return reply.code(404).send({
+        success: false,
+        message: 'Task not found.'
       });
     }
 
-    updateData.user_id = targetUser.id;
-  }
-
-  let updateQuery = db('tasks').where({ id });
-
-  if (currentUser.role !== 'admin') {
-    updateQuery = updateQuery.where('user_id', currentUser.id);
-  }
-
-  const [updatedTask] = await updateQuery
-    .update(updateData)
-    .returning('*');
-
-  if (!updatedTask) {
-    return reply.code(404).send({
-      statusCode: 404,
-      error: 'Not Found',
-      message: `Task with id "${id}" not found`
+    return reply.code(200).send({
+      success: true,
+      message: 'Task updated successfully.',
+      data: updatedTask
+    });
+  } catch (error) {
+    console.error('updateTask error:', error);
+    request.log?.error(error);
+    return reply.code(500).send({
+      success: false,
+      message: 'Failed to update task.',
+      error: error.message
     });
   }
-
-  return reply.code(200).send({
-    success: true,
-    message: 'Task updated successfully',
-    data: updatedTask
-  });
 }
 
 /**
- * DELETE a task.
+ * DELETE a task belonging to the logged-in user.
+ * DELETE /api/tasks/:id
  */
 export async function deleteTask(request, reply) {
   const currentUser = await getAuthenticatedUser(request);
@@ -328,29 +325,41 @@ export async function deleteTask(request, reply) {
     });
   }
 
-  const { id } = request.params;
+  const { id } = request.params || {};
 
-  let deleteQuery = db('tasks').where({ id });
-
-  if (currentUser.role !== 'admin') {
-    deleteQuery = deleteQuery.where('user_id', currentUser.id);
-  }
-
-  const [deletedTask] = await deleteQuery
-    .del()
-    .returning('*');
-
-  if (!deletedTask) {
-    return reply.code(404).send({
-      statusCode: 404,
-      error: 'Not Found',
-      message: `Task with id "${id}" not found`
+  if (!id) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Task ID is required.'
     });
   }
 
-  return reply.code(200).send({
-    success: true,
-    message: 'Task deleted successfully',
-    data: deletedTask
-  });
+  try {
+    const deletedCount = await db('tasks')
+      .where({
+        id,
+        user_id: currentUser.id
+      })
+      .del();
+
+    if (deletedCount === 0) {
+      return reply.code(404).send({
+        success: false,
+        message: 'Task not found.'
+      });
+    }
+
+    return reply.code(200).send({
+      success: true,
+      message: 'Task deleted successfully.'
+    });
+  } catch (error) {
+    console.error('deleteTask error:', error);
+    request.log?.error(error);
+    return reply.code(500).send({
+      success: false,
+      message: 'Failed to delete task.',
+      error: error.message
+    });
+  }
 }

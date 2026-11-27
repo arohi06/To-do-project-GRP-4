@@ -1,9 +1,11 @@
-
 :host {
   display: block;
+  width: 100%;
   min-height: 100vh;
   color: #1e293b;
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: #a5b4fc #f1f5f9;
 }
 
 * {
@@ -11,17 +13,13 @@
 }
 
 .app-wrapper {
+  width: 100%;
   min-height: 100vh;
-  padding: 0 5% 48px;
+  padding: 0 3.5% 48px;
   background: #f8fafc;
 }
 
 /* Scrollbar */
-:host {
-  scrollbar-width: thin;
-  scrollbar-color: #a5b4fc #f1f5f9;
-}
-
 :host ::-webkit-scrollbar {
   width: 9px;
 }
@@ -43,12 +41,13 @@
 /* Navigation */
 .navbar {
   min-height: 82px;
+  width: calc(100% + 7%);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 28px;
-  margin: 0 -5.55%;
-  padding: 14px 5.55%;
+  margin: 0 -3.5%;
+  padding: 14px 3.5%;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.025);
@@ -214,9 +213,11 @@
 /* Main content */
 main {
   width: 100%;
-  max-width: 1440px;
+  max-width: none;
+  min-height: calc(100vh - 82px);
   margin: 0 auto;
   padding-top: 36px;
+  padding-bottom: 40px;
 }
 
 /* Page headings */
@@ -248,12 +249,13 @@ main {
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
+  gap: 22px;
   margin-bottom: 25px;
 }
 
 .stat-card {
   position: relative;
+  min-width: 0;
   overflow: hidden;
   padding: 23px;
   border: 1px solid #e8edf5;
@@ -318,6 +320,7 @@ main {
 
 /* Dashboard progress */
 .dashboard-progress {
+  width: 100%;
   padding: 25px;
   margin-bottom: 23px;
   border: 1px solid #e8edf5;
@@ -376,6 +379,7 @@ main {
 
 /* Dashboard actions */
 .dashboard-actions {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -456,6 +460,7 @@ main {
 
 /* Task toolbar */
 .task-toolbar {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -480,6 +485,7 @@ main {
 .filter-controls {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
 }
 
@@ -489,12 +495,14 @@ main {
 
 /* Task list */
 .task-list {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 13px;
 }
 
 .task-card {
+  width: 100%;
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -916,205 +924,9 @@ main {
   color: #64748b;
 }
 
-/* Responsive layout */
-@media (max-width: 1000px) {
-  .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .navbar {
-    flex-wrap: wrap;
-  }
-
-  .navbar-actions {
-    margin-left: auto;
-  }
-}
-
-@media (max-width: 768px) {
-  .app-wrapper {
-    padding: 0 20px 35px;
-  }
-
-  .navbar {
-    margin: 0 -20px;
-    padding: 16px 20px;
-    gap: 16px;
-  }
-
-  .nav-links {
-    order: 3;
-    width: 100%;
-  }
-
-  .nav-link {
-    flex: 1;
-  }
-
-  .navbar-actions {
-    gap: 10px;
-  }
-
-  .user-profile {
-    gap: 8px;
-    padding-left: 10px;
-  }
-
-  main {
-    padding-top: 27px;
-  }
-
-  .page-heading {
-    align-items: flex-start;
-  }
-
-  .page-heading h1 {
-    font-size: 1.5rem;
-  }
-
-  .dashboard-actions {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .task-toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .filter-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 520px) {
-  .navbar {
-    gap: 14px;
-  }
-
-  .brand-name {
-    font-size: 1.25rem;
-  }
-
-  .brand-tag {
-    font-size: 0.58rem;
-  }
-
-  .navbar-actions {
-    gap: 7px;
-  }
-
-  .navbar-actions > .btn {
-    padding: 9px 11px;
-    font-size: 0.76rem;
-  }
-
-  .user-details {
-    display: none;
-  }
-
-  .user-profile {
-    padding-left: 8px;
-  }
-
-  .stat-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 11px;
-  }
-
-  .stat-card {
-    padding: 17px 14px;
-  }
-
-  .stat-value {
-    font-size: 1.8rem;
-  }
-
-  .stat-label {
-    font-size: 0.77rem;
-  }
-
-  .page-heading {
-    flex-direction: column;
-  }
-
-  .page-heading > .btn {
-    width: 100%;
-  }
-
-  .dashboard-progress,
-  .dashboard-actions {
-    padding: 19px;
-  }
-
-  .task-card {
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 17px;
-  }
-
-  .task-content {
-    flex-basis: calc(100% - 35px);
-  }
-
-  .task-actions {
-    width: 100%;
-    padding-left: 30px;
-  }
-
-  .task-actions .btn {
-    flex: 1;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .filter-controls {
-    grid-template-columns: 1fr;
-  }
-
-  .login-page {
-    padding: 16px;
-  }
-
-  .login-card {
-    padding: 32px 22px;
-  }
-
-  .auth-heading h1 {
-    font-size: 1.35rem;
-  }
-
-  .modal-backdrop {
-    padding: 12px;
-  }
-
-  .modal-body {
-    padding: 19px;
-  }
-
-  .modal-header,
-  .modal-footer {
-    padding: 16px 19px;
-  }
-}
-
-/* Reduced motion accessibility */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 /* DASHBOARD TASK LIST */
 .dashboard-task-section {
+  width: 100%;
   margin: 28px 0 36px;
   padding: 26px;
   background: #ffffff;
@@ -1247,36 +1059,10 @@ body::-webkit-scrollbar-thumb:hover {
   background: #9296aa;
 }
 
-/* RESPONSIVE DASHBOARD */
-@media (max-width: 650px) {
-  .dashboard-task-section {
-    padding: 17px;
-    margin-top: 20px;
-  }
-
-  .dashboard-task-card {
-    flex-wrap: wrap;
-    gap: 11px;
-  }
-
-  .dashboard-task-content {
-    flex-basis: calc(100% - 40px);
-  }
-
-  .dashboard-task-card .task-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .section-heading {
-    align-items: flex-start;
-  }
-}
-
 /* ADMIN DASHBOARD */
-
 .admin-section {
-  margin-top: 28px;
+  width: 100%;
+  margin-top: 30px;
 }
 
 .admin-count {
@@ -1292,17 +1078,21 @@ body::-webkit-scrollbar-thumb:hover {
 .admin-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  background: #ffffff;
 }
 
 .admin-table {
   width: 100%;
+  min-width: 750px;
   border-collapse: collapse;
   text-align: left;
   font-size: 14px;
 }
 
 .admin-table th {
-  padding: 15px 14px;
+  padding: 17px 16px;
   background: #f8f8fc;
   color: #66677a;
   font-size: 12px;
@@ -1312,7 +1102,7 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 .admin-table td {
-  padding: 16px 14px;
+  padding: 17px 16px;
   border-bottom: 1px solid #eeeeF4;
   color: #34354a;
   vertical-align: middle;
@@ -1338,104 +1128,74 @@ body::-webkit-scrollbar-thumb:hover {
   cursor: not-allowed;
 }
 
-@media (max-width: 650px) {
-  .admin-table {
-    min-width: 650px;
+/* DUE TASK NOTIFICATION */
+.due-notice {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  padding: 16px 36px 16px 16px;
+  background: #fff7e6;
+  border: 1px solid #f5a623;
+  border-left: 5px solid #f5a623;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+  color: #1e293b;
+
+  strong {
+    display: block;
+    color: #92400e;
+    font-size: 0.92rem;
   }
 
-  .admin-section {
-    padding: 16px;
+  p {
+    margin: 6px 0;
+    font-size: 0.84rem;
+    color: #475569;
+  }
+
+  ul {
+    margin: 6px 0;
+    padding-left: 18px;
+    font-size: 0.84rem;
+    color: #1e293b;
   }
 }
 
-/* ==========================================
-   TASKFLOW UI IMPROVEMENTS – FULL SCREEN
-   ========================================== */
-
-/* Full available application space */
-:host {
-  display: block;
-  width: 100%;
-  min-height: 100vh;
+.due-notice-close {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #78350f;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.app-wrapper {
-  width: 100%;
-  min-height: 100vh;
-  padding: 0 3.5% 48px;
+.due-notice-close:hover {
+  color: #0f172a;
 }
 
-/* Full-width navigation */
-.navbar {
-  margin-left: -3.5%;
-  margin-right: -3.5%;
-  padding-left: 3.5%;
-  padding-right: 3.5%;
-  width: calc(100% + 7%);
+.due-notice-view {
+  margin-top: 8px;
+  padding: 7px 13px;
+  background: #f5a623;
+  color: #0f172a;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-/* Remove the desktop content width restriction */
-main {
-  width: 100%;
-  max-width: none;
-  min-height: calc(100vh - 82px);
-  margin: 0 auto;
-  padding-top: 36px;
-  padding-bottom: 40px;
-}
-
-/* Better use of available dashboard space */
-.stat-grid {
-  gap: 22px;
-}
-
-.stat-card {
-  min-width: 0;
-}
-
-.dashboard-progress,
-.dashboard-actions,
-.dashboard-task-section {
-  width: 100%;
-}
-
-/* Improve admin management sections */
-.admin-section {
-  width: 100%;
-  margin-top: 30px;
-}
-
-.admin-table-wrapper {
-  width: 100%;
-  border: 1px solid #e8edf5;
-  border-radius: 12px;
-  background: #ffffff;
-}
-
-.admin-table {
-  width: 100%;
-  min-width: 750px;
-}
-
-.admin-table th {
-  padding: 17px 16px;
-}
-
-.admin-table td {
-  padding: 17px 16px;
-}
-
-/* Better desktop task layout */
-.task-toolbar {
-  width: 100%;
-}
-
-.task-list {
-  width: 100%;
-}
-
-.task-card {
-  width: 100%;
+.due-notice-view:hover {
+  background: #e09212;
 }
 
 /* Larger desktop spacing */
@@ -1466,7 +1226,21 @@ main {
   }
 }
 
-/* Preserve tablet and mobile layout */
+/* Responsive layout */
+@media (max-width: 1000px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .navbar {
+    flex-wrap: wrap;
+  }
+
+  .navbar-actions {
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .app-wrapper {
     padding: 0 20px 35px;
@@ -1474,14 +1248,221 @@ main {
 
   .navbar {
     width: calc(100% + 40px);
-    margin-left: -20px;
-    margin-right: -20px;
-    padding-left: 20px;
-    padding-right: 20px;
+    margin: 0 -20px;
+    padding: 16px 20px;
+    gap: 16px;
+  }
+
+  .nav-links {
+    order: 3;
+    width: 100%;
+  }
+
+  .nav-link {
+    flex: 1;
+  }
+
+  .navbar-actions {
+    gap: 10px;
+  }
+
+  .user-profile {
+    gap: 8px;
+    padding-left: 10px;
   }
 
   main {
     min-height: auto;
+    padding-top: 27px;
+  }
+
+  .page-heading {
+    align-items: flex-start;
+  }
+
+  .page-heading h1 {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .task-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
+@media (max-width: 650px) {
+  .dashboard-task-section {
+    padding: 17px;
+    margin-top: 20px;
+  }
+
+  .dashboard-task-card {
+    flex-wrap: wrap;
+    gap: 11px;
+  }
+
+  .dashboard-task-content {
+    flex-basis: calc(100% - 40px);
+  }
+
+  .dashboard-task-card .task-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .admin-table {
+    min-width: 650px;
+  }
+
+  .admin-section {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .navbar {
+    gap: 14px;
+  }
+
+  .brand-name {
+    font-size: 1.25rem;
+  }
+
+  .brand-tag {
+    font-size: 0.58rem;
+  }
+
+  .navbar-actions {
+    gap: 7px;
+  }
+
+  .navbar-actions > .btn {
+    padding: 9px 11px;
+    font-size: 0.76rem;
+  }
+
+  .user-details {
+    display: none;
+  }
+
+  .user-profile {
+    padding-left: 8px;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+  }
+
+  .stat-card {
+    padding: 17px 14px;
+  }
+
+  .stat-value {
+    font-size: 1.8rem;
+  }
+
+  .stat-label {
+    font-size: 0.77rem;
+  }
+
+  .page-heading {
+    flex-direction: column;
+  }
+
+  .page-heading > .btn {
+    width: 100%;
+  }
+
+  .dashboard-progress,
+  .dashboard-actions {
+    padding: 19px;
+  }
+
+  .task-card {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 17px;
+  }
+
+  .task-content {
+    flex-basis: calc(100% - 35px);
+  }
+
+  .task-actions {
+    width: 100%;
+    padding-left: 30px;
+  }
+
+  .task-actions .btn {
+    flex: 1;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .filter-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .login-page {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 32px 22px;
+  }
+
+  .auth-heading h1 {
+    font-size: 1.35rem;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-body {
+    padding: 19px;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 16px 19px;
+  }
+
+  .due-notice {
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
