@@ -1,0 +1,77 @@
+// ==============================================================================
+// Group 4 To-Do App — Modal Dialog Styles
+// Author: Naivedya Pramod Yadav (@Not-naive18) — UI/UX Designer
+// ==============================================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba($color-slate-900, 0.55);
+  backdrop-filter: blur(4px);
+  @include flex-center;
+  z-index: 1000;
+  padding: $space-4;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-dialog {
+  background-color: #FFFFFF;
+  border-radius: $radius-lg;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: $shadow-xl;
+  overflow: hidden;
+  animation: slideInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .modal-header {
+    padding: $space-5 $space-6;
+    border-bottom: 1px solid $color-slate-200;
+    @include flex-between;
+
+    .modal-title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+      color: $color-slate-900;
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.25rem;
+      color: $color-slate-400;
+      cursor: pointer;
+      padding: $space-1;
+      line-height: 1;
+
+      &:hover {
+        color: $color-slate-700;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: $space-6;
+  }
+
+  .modal-footer {
+    padding: $space-4 $space-6;
+    background-color: $color-slate-50;
+    border-top: 1px solid $color-slate-200;
+    display: flex;
+    justify-content: flex-end;
+    gap: $space-3;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(12px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}

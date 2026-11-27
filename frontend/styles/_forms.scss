@@ -1,0 +1,78 @@
+// ==============================================================================
+// Group 4 To-Do App — Form Components & Controls
+// Author: Naivedya Pramod Yadav (@Not-naive18) — UI/UX Designer
+// ==============================================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.form-group {
+  margin-bottom: $space-4;
+  text-align: left;
+}
+
+.form-label {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-slate-700;
+  margin-bottom: $space-1;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  color: $color-slate-900;
+  background-color: #FFFFFF;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: $color-slate-400;
+  }
+
+  &:focus {
+    @include focus-ring;
+  }
+
+  &.has-error {
+    border-color: $color-danger-500;
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($color-danger-500, 0.2);
+    }
+  }
+}
+
+.form-textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: $font-size-xs;
+  color: $color-danger-600;
+  margin-top: $space-1;
+}
+
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-sm;
+  border: 2px solid $color-slate-400;
+  accent-color: $color-primary-600;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.9);
+  }
+}

@@ -1,0 +1,64 @@
+// ==============================================================================
+// Group 4 To-Do App — Status & Priority Badges
+// Author: Naivedya Pramod Yadav (@Not-naive18) — UI/UX Designer
+// ==============================================================================
+
+@use 'variables' as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  padding: 0.25rem 0.625rem; // 4px 10px
+  border-radius: $radius-full;
+  font-family: $font-family-base;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+
+  // --- Status Variations ---
+  &-status-pending,
+  &-pending {
+    background-color: $status-pending-bg;
+    color: $status-pending-text;
+    border-color: $status-pending-border;
+  }
+
+  &-status-inprogress,
+  &-inprogress {
+    background-color: $status-progress-bg;
+    color: $status-progress-text;
+    border-color: $status-progress-border;
+  }
+
+  &-status-completed,
+  &-completed {
+    background-color: $status-completed-bg;
+    color: $status-completed-text;
+    border-color: $status-completed-border;
+  }
+
+  // --- Priority Variations ---
+  &-priority-low,
+  &-low {
+    background-color: $priority-low-bg;
+    color: $priority-low-text;
+    border-color: $priority-low-border;
+  }
+
+  &-priority-medium,
+  &-medium {
+    background-color: $priority-med-bg;
+    color: $priority-med-text;
+    border-color: $priority-med-border;
+  }
+
+  &-priority-high,
+  &-high {
+    background-color: $priority-high-bg;
+    color: $priority-high-text;
+    border-color: $priority-high-border;
+  }
+}
