@@ -4,7 +4,13 @@
       <h1>To-Do Task Manager</h1>
       <p>Dashboard &amp; Task Management</p>
     </div>
-    <span class="badge-live">Frontend Ready</span>
+
+    <div class="header-actions">
+      <button type="button" class="btn-theme" (click)="toggleTheme()">
+        {{ isDarkMode() ? '☀️ Light Mode' : '🌙 Dark Mode' }}
+      </button>
+      <span class="badge-live">Frontend Ready</span>
+    </div>
   </header>
 
   <!-- DASHBOARD SUMMARY -->

@@ -8,13 +8,17 @@ import { TaskService, Task } from './services/task.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
+  host: {
+    '[class.dark-theme]': 'isDarkMode()'
+  }
 })
 export class App implements OnInit {
   tasks = signal<Task[]>([]);
   filterStatus = signal<string>('All');
   editingTaskId = signal<number | null>(null);
   isLoading = signal<boolean>(false);
+  isDarkMode = signal<boolean>(false);
 
   // Form model matching database fields
   taskForm: Task = {
@@ -41,7 +45,19 @@ export class App implements OnInit {
   constructor(private taskService: TaskService) {}
 
   ngOnInit(): void {
+    // Load saved theme preference if available
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      this.isDarkMode.set(true);
+    }
+
     this.loadTasks();
+  }
+
+  toggleTheme(): void {
+    const nextMode = !this.isDarkMode();
+    this.isDarkMode.set(nextMode);
+    localStorage.setItem('theme', nextMode ? 'dark' : 'light');
   }
 
   loadTasks(): void {
