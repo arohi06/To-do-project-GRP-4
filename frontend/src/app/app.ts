@@ -1,4 +1,3 @@
-
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +17,14 @@ import {
 } from './services/task.service';
 
 import { AuthService } from './services/auth.service';
+
+export interface DueNotice {
+  total: number;
+  overdueCount: number;
+  dueTodayCount: number;
+  titles: string[];
+  dueIds: string[];
+}
 
 @Component({
   selector: 'app-root',
@@ -53,6 +60,8 @@ export class App implements OnInit {
   isDarkMode = signal<boolean>(false);
   filterStatus = signal<'all' | TaskStatus>('all');
   filterPriority = signal<'all' | TaskPriority>('all');
+  dueOnlyFilter = signal(false);
+  dueTaskIds = signal<string[]>([]);
   searchQuery = signal('');
 
   isModalOpen = signal(false);
@@ -60,6 +69,9 @@ export class App implements OnInit {
   isLoading = signal(false);
   isSaving = signal(false);
   errorMessage = signal('');
+
+  // DUE TASK NOTIFICATION (shown after login)
+  dueNotice = signal<DueNotice | null>(null);
 
   // ADMIN DASHBOARD STATE
   adminOverview = signal<AdminOverview | null>(null);
@@ -136,6 +148,8 @@ export class App implements OnInit {
   filteredTasks = computed(() => {
     const status = this.filterStatus();
     const priority = this.filterPriority();
+    const onlyDue = this.dueOnlyFilter();
+    const dueIds = this.dueTaskIds();
     const query = this.searchQuery().trim().toLowerCase();
 
     return this.tasks().filter(task => {
@@ -145,21 +159,23 @@ export class App implements OnInit {
       const matchesPriority =
         priority === 'all' || task.priority === priority;
 
+      const matchesDue =
+        !onlyDue || (!!task.id && dueIds.includes(task.id));
+
       const matchesSearch =
         !query ||
         task.title.toLowerCase().includes(query) ||
         (task.description || '').toLowerCase().includes(query);
 
-      return matchesStatus && matchesPriority && matchesSearch;
+      return matchesStatus && matchesPriority && matchesDue && matchesSearch;
     });
   });
 
-  // SERVICES
   constructor(
     public authService: AuthService,
     private taskService: TaskService,
     private adminService: AdminService
-  ) { }
+  ) {}
 
   // INITIALIZE APPLICATION
   ngOnInit(): void {
@@ -175,6 +191,7 @@ export class App implements OnInit {
       next: () => {
         this.isCheckingSession.set(false);
         this.loadTasks();
+        this.checkDueTasks();
       },
       error: () => {
         this.authService.logout();
@@ -206,6 +223,7 @@ export class App implements OnInit {
         this.loginPassword = '';
         this.activeView.set('dashboard');
         this.loadTasks();
+        this.checkDueTasks();
       },
       error: error => {
         this.isAuthenticating.set(false);
@@ -214,6 +232,52 @@ export class App implements OnInit {
         );
       }
     });
+  }
+
+  // DUE TASK NOTIFICATION (shown after login)
+  private checkDueTasks(): void {
+    this.taskService.getDueTasks().subscribe({
+      next: res => {
+        if (!res.total) {
+          this.dueNotice.set(null);
+          this.dueTaskIds.set([]);
+          return;
+        }
+
+        const ids = res.data.map(task => task.id);
+        this.dueTaskIds.set(ids);
+        this.dueNotice.set({
+          total: res.total,
+          overdueCount: res.overdueCount,
+          dueTodayCount: res.dueTodayCount,
+          titles: res.data.slice(0, 3).map(task => task.title),
+          dueIds: ids
+        });
+      },
+      error: () => {
+        this.dueNotice.set(null);
+        this.dueTaskIds.set([]);
+      }
+    });
+  }
+
+  dismissDueNotice(): void {
+    this.dueNotice.set(null);
+  }
+
+  viewDueTasks(): void {
+    const notice = this.dueNotice();
+    if (notice?.dueIds?.length) {
+      this.dueTaskIds.set(notice.dueIds);
+      this.dueOnlyFilter.set(true);
+    }
+    this.filterStatus.set('pending');
+    this.activeView.set('tasks');
+    this.dismissDueNotice();
+  }
+
+  clearDueFilter(): void {
+    this.dueOnlyFilter.set(false);
   }
 
   // SWITCH AUTHENTICATION MODE
@@ -264,6 +328,9 @@ export class App implements OnInit {
         this.confirmPassword = '';
 
         this.activeView.set('dashboard');
+        this.dueNotice.set(null);
+        this.dueTaskIds.set([]);
+        this.dueOnlyFilter.set(false);
         this.loadTasks();
       },
       error: error => {
@@ -281,12 +348,16 @@ export class App implements OnInit {
 
     this.tasks.set([]);
     this.activeView.set('dashboard');
+    this.dueOnlyFilter.set(false);
+    this.dueTaskIds.set([]);
 
     this.adminOverview.set(null);
     this.adminUsers.set([]);
     this.adminTasks.set([]);
     this.adminError.set('');
     this.selectedAdminUserId.set(null);
+
+    this.dueNotice.set(null);
 
     this.errorMessage.set('');
     this.authError.set('');
@@ -334,7 +405,9 @@ export class App implements OnInit {
   openTaskList(): void {
     this.activeView.set('tasks');
     this.filterStatus.set('all');
+    this.dueOnlyFilter.set(false);
   }
+
   // VIEW A SPECIFIC USER'S TASKS
   viewUserTasks(userId: string): void {
     this.selectedAdminUserId.set(userId);
@@ -344,7 +417,6 @@ export class App implements OnInit {
   clearSelectedUser(): void {
     this.selectedAdminUserId.set(null);
   }
-  // LOAD USER TASKS
 
   // LOAD PERSONAL TASKS
   loadTasks(): void {
@@ -386,7 +458,6 @@ export class App implements OnInit {
       }
     };
 
-    // Load statistics
     this.adminService.getOverview().subscribe({
       next: response => {
         this.adminOverview.set(response.data);
@@ -400,7 +471,6 @@ export class App implements OnInit {
       }
     });
 
-    // Load users
     this.adminService.getUsers().subscribe({
       next: response => {
         this.adminUsers.set(response.data);
@@ -414,7 +484,6 @@ export class App implements OnInit {
       }
     });
 
-    // Load all tasks
     this.adminService.getTasks().subscribe({
       next: response => {
         this.adminTasks.set(response.data);
@@ -508,8 +577,9 @@ export class App implements OnInit {
 
     if (editId) {
       this.taskService.updateTask(editId, payload).subscribe({
-        next: updated => {
+        next: () => {
           this.loadTasks();
+          this.checkDueTasks();
 
           if (this.authService.currentUser()?.role === 'admin') {
             this.loadAdminDashboard();
@@ -527,8 +597,9 @@ export class App implements OnInit {
       });
     } else {
       this.taskService.createTask(payload).subscribe({
-        next: created => {
+        next: () => {
           this.loadTasks();
+          this.checkDueTasks();
 
           if (this.authService.currentUser()?.role === 'admin') {
             this.loadAdminDashboard();
@@ -576,6 +647,7 @@ export class App implements OnInit {
         this.tasks.update(list =>
           list.map(item => item.id === task.id ? updated : item)
         );
+        this.checkDueTasks();
       },
       error: error => {
         this.errorMessage.set(
@@ -592,6 +664,7 @@ export class App implements OnInit {
     this.taskService.deleteTask(id).subscribe({
       next: () => {
         this.loadTasks();
+        this.checkDueTasks();
 
         this.adminTasks.update(list =>
           list.filter(task => task.id !== id)

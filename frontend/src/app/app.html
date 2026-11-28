@@ -173,6 +173,27 @@
     </div>
   </header>
 
+  <!-- DUE TASK NOTIFICATION (shown after login) -->
+  <div class="due-notice" role="status" aria-live="polite" *ngIf="dueNotice() as notice">
+    <button type="button" class="due-notice-close" aria-label="Dismiss notification" (click)="dismissDueNotice()">
+      &times;
+    </button>
+
+    <strong>Tasks need your attention</strong>
+
+    <p>{{ notice.overdueCount }} overdue, {{ notice.dueTodayCount }} due today</p>
+
+    <ul>
+      <li *ngFor="let title of notice.titles">{{ title }}</li>
+    </ul>
+
+    <p *ngIf="notice.total > 3">and {{ notice.total - 3 }} more</p>
+
+    <button type="button" class="due-notice-view" (click)="viewDueTasks()">
+      View tasks
+    </button>
+  </div>
+
   <!-- USER ERROR MESSAGE -->
   <div class="error-message" *ngIf="errorMessage() && !isModalOpen()">
     {{ errorMessage() }}
@@ -276,7 +297,7 @@
         Loading your tasks...
       </div>
 
-      <div *ngIf="!isLoading() && filteredTasks().length === 0" class="dashboard-empty">
+      <div *ngIf="!isLoading() && tasks().length === 0" class="dashboard-empty">
 
         <h3>Your task list is empty</h3>
         <p>Create your first task and start organizing your day.</p>
@@ -287,9 +308,9 @@
 
       </div>
 
-      <div class="dashboard-task-list" *ngIf="!isLoading()">
+      <div class="dashboard-task-list" *ngIf="!isLoading() && tasks().length > 0">
 
-        <article *ngFor="let task of filteredTasks() | slice:0:5" class="dashboard-task-card"
+        <article *ngFor="let task of tasks() | slice:0:5" class="dashboard-task-card"
           [class.is-completed]="task.status === 'completed'">
 
           <input type="checkbox" class="task-checkbox" [checked]="task.status === 'completed'" [attr.aria-label]="'Mark ' + task.title + ' as ' +
@@ -338,7 +359,7 @@
 
       </div>
 
-      <p class="dashboard-task-note" *ngIf="!isLoading() && filteredTasks().length > 5">
+      <p class="dashboard-task-note" *ngIf="!isLoading() && tasks().length > 5">
         Showing your first 5 tasks. View all to see the complete list.
       </p>
 
@@ -599,7 +620,6 @@
 
       </section>
 
-
       <!-- ALL TASKS -->
       <section class="dashboard-task-section admin-section">
 
@@ -721,6 +741,10 @@
       </div>
 
       <div class="filter-controls">
+
+        <button *ngIf="dueOnlyFilter()" type="button" class="btn btn-sm btn-secondary" (click)="clearDueFilter()">
+          Due / Overdue Only &times;
+        </button>
 
         <select class="form-select" aria-label="Filter by status" [ngModel]="filterStatus()"
           (ngModelChange)="filterStatus.set($event)">
