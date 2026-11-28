@@ -31,7 +31,10 @@ export interface DueNotice {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
+    host: {
+    '[class.dark-theme]': 'isDarkMode()'
+  }
 })
 export class App implements OnInit {
 
@@ -54,6 +57,7 @@ export class App implements OnInit {
 
   // TASK DATA AND UI STATE
   tasks = signal<Task[]>([]);
+  isDarkMode = signal<boolean>(false);
   filterStatus = signal<'all' | TaskStatus>('all');
   filterPriority = signal<'all' | TaskPriority>('all');
   dueOnlyFilter = signal(false);
@@ -175,6 +179,9 @@ export class App implements OnInit {
 
   // INITIALIZE APPLICATION
   ngOnInit(): void {
+    const savedTheme = localStorage.getItem('theme');
+    this.isDarkMode.set(savedTheme === 'dark');
+
     if (!this.authService.getToken()) {
       this.isCheckingSession.set(false);
       return;
@@ -192,7 +199,11 @@ export class App implements OnInit {
       }
     });
   }
-
+  toggleTheme(): void {
+    const nextMode = !this.isDarkMode();
+    this.isDarkMode.set(nextMode);
+    localStorage.setItem('theme', nextMode ? 'dark' : 'light');
+  }
   // LOGIN
   login(): void {
     if (!this.loginEmail.trim() || !this.loginPassword) {

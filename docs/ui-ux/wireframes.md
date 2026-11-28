@@ -1,8 +1,8 @@
 # UI/UX Screen Wireframes — Group 4 To-Do Application
 
-**Author:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18)) — UI/UX Designer  
-**Repository:** `arohi06/To-do-project-GRP-4`  
-**Git Branch:** `feature/ui-ux`  
+**Author:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18)) — UI/UX Designer
+**Repository:** `arohi06/To-do-project-GRP-4`
+**Git Branch:** `feature/ui-ux`
 
 This document provides visual ASCII wireframes, layout blueprints, component breakdowns, and responsive behavior for the **4 core screens**:
 1. [Screen 1: Login & Authentication Screen](#screen-1-login--authentication-screen)

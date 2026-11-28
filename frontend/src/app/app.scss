@@ -1466,3 +1466,254 @@ body::-webkit-scrollbar-thumb:hover {
     transition-duration: 0.01ms !important;
   }
 }
+/* ==========================================
+   DARK / LIGHT THEME SUPPORT
+========================================== */
+
+:host {
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-item: #fcfcfd;
+  --bg-input: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-border: #dbe2ea;
+  --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.035);
+}
+
+:host(.dark-theme) {
+  --bg-page: #0f172a;
+  --bg-card: #1e293b;
+  --bg-item: #172338;
+  --bg-input: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --input-border: #475569;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Main application */
+:host,
+.app-wrapper {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* Navigation */
+.navbar {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.user-profile {
+  border-color: var(--border-color);
+}
+
+.user-details strong,
+.page-heading h1,
+.progress-heading h2,
+.dashboard-actions h2,
+.section-heading h2,
+.dashboard-task-content h3,
+.admin-table td,
+.modal-title {
+  color: var(--text-primary);
+}
+
+.brand-tag,
+.role-badge,
+.page-heading p,
+.stat-label,
+.stat-footer,
+.progress-heading p,
+.progress-caption,
+.dashboard-actions p,
+.task-desc,
+.task-due-date,
+.dashboard-task-content p,
+.dashboard-task-note {
+  color: var(--text-muted);
+}
+
+/* Navigation links */
+.nav-link {
+  color: var(--text-secondary);
+}
+
+.nav-link:hover {
+  background: var(--bg-item);
+}
+
+.nav-link.active {
+  background: #312e81;
+  color: #e0e7ff;
+}
+
+/* Cards and sections */
+.stat-card,
+.dashboard-progress,
+.dashboard-actions,
+.dashboard-task-section,
+.dashboard-task-card,
+.task-toolbar,
+.task-card,
+.admin-table-wrapper,
+.login-card,
+.modal-dialog {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+}
+
+/* Task card */
+.task-card.is-completed,
+.dashboard-task-card.is-completed {
+  background: var(--bg-item);
+}
+
+/* Forms */
+.form-input,
+.form-select,
+.form-textarea,
+.login-card .form-input {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--input-border);
+  color-scheme: light;
+}
+
+.dark-theme .form-input,
+.dark-theme .form-select,
+.dark-theme .form-textarea,
+.dark-theme .login-card .form-input {
+  color-scheme: dark;
+}
+
+.form-label,
+.login-card .form-label {
+  color: var(--text-secondary);
+}
+
+/* Buttons */
+.btn-secondary {
+  background: var(--bg-item);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Theme toggle */
+.btn-theme {
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--bg-item);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.btn-theme:hover {
+  border-color: #818cf8;
+}
+
+/* Tables */
+.admin-table th {
+  background: var(--bg-item);
+  color: var(--text-secondary);
+}
+
+.admin-table td {
+  border-color: var(--border-color);
+}
+
+.admin-table tbody tr:hover {
+  background: var(--bg-item);
+}
+
+/* Modal */
+.modal-header,
+.modal-footer {
+  border-color: var(--border-color);
+}
+
+.modal-footer {
+  background: var(--bg-item);
+}
+
+.modal-close-btn {
+  background: var(--bg-item);
+  color: var(--text-secondary);
+}
+
+/* Empty states */
+.loading-state,
+.empty-state,
+.dashboard-empty {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.empty-state h3,
+.dashboard-empty h3 {
+  color: var(--text-primary);
+}
+
+/* Login page */
+.login-page {
+  background: var(--bg-page);
+}
+
+.auth-brand-name,
+.auth-heading h1 {
+  color: var(--text-primary);
+}
+
+.auth-heading p,
+.auth-switch {
+  color: var(--text-muted);
+}
+
+/* Theme transition */
+.stat-card,
+.dashboard-progress,
+.dashboard-actions,
+.dashboard-task-section,
+.dashboard-task-card,
+.task-card,
+.task-toolbar,
+.login-card,
+.modal-dialog {
+  transition: background 0.25s ease, border-color 0.25s ease,
+              color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Responsive theme toggle */
+@media (max-width: 520px) {
+  .navbar-actions > .btn-theme {
+    padding: 8px 9px;
+    font-size: 0.72rem;
+  }
+}
+
+/* Dark mode visibility fixes */
+:host(.dark-theme) .stat-value {
+  color: #f8fafc;
+}
+
+:host(.dark-theme) .task-title {
+  color: #f8fafc;
+}
+
+:host(.dark-theme) .task-card.is-completed .task-title {
+  color: #94a3b8;
+}

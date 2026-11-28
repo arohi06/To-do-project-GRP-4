@@ -1,12 +1,12 @@
 # UI/UX Design Documentation — Group 4 To-Do Application
 
-**Role:** UI/UX Designer  
-**Team Member:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18))  
-**Project:** To-Do Web Application (Winter Internship)  
-**Project Manager:** Vyas Angre  
-**Team Repository:** [arohi06/To-do-project-GRP-4](https://github.com/arohi06/To-do-project-GRP-4)  
-**Git Branch:** `feature/ui-ux`  
-**Target Folders:** `docs/ui-ux/` and `frontend/styles/`  
+**Role:** UI/UX Designer
+**Team Member:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18))
+**Project:** To-Do Web Application (Winter Internship)
+**Project Manager:** Vyas Angre
+**Team Repository:** [arohi06/To-do-project-GRP-4](https://github.com/arohi06/To-do-project-GRP-4)
+**Git Branch:** `feature/ui-ux`
+**Target Folders:** `docs/ui-ux/` and `frontend/styles/`
 
 ---
 

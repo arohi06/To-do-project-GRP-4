@@ -19,7 +19,7 @@
       --text-primary: #0F172A;
       --text-secondary: #475569;
       --text-muted: #94A3B8;
-      
+
       --status-pending-bg: #FEF3C7;
       --status-pending-text: #92400E;
       --status-progress-bg: #E0E7FF;
@@ -840,10 +840,10 @@
 
       container.innerHTML = taskList.map(task => `
         <div class="task-card ${task.status === 'completed' ? 'is-completed' : ''}">
-          <input 
-            type="checkbox" 
-            class="task-checkbox" 
-            ${task.status === 'completed' ? 'checked' : ''} 
+          <input
+            type="checkbox"
+            class="task-checkbox"
+            ${task.status === 'completed' ? 'checked' : ''}
             onchange="toggleTask(${task.id})"
           />
           <div class="task-content">
@@ -879,7 +879,7 @@
       const priorityFilter = document.getElementById('priorityFilter')?.value || 'ALL';
 
       const filtered = tasks.filter(t => {
-        const matchesQuery = t.title.toLowerCase().includes(query) || 
+        const matchesQuery = t.title.toLowerCase().includes(query) ||
                              t.description.toLowerCase().includes(query) ||
                              t.member.toLowerCase().includes(query);
         const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;

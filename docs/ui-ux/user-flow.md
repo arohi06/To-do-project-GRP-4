@@ -1,8 +1,8 @@
 # User Flow & Screen Navigation — Group 4 To-Do Application
 
-**Author:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18)) — UI/UX Designer  
-**Repository:** `arohi06/To-do-project-GRP-4`  
-**Git Branch:** `feature/ui-ux`  
+**Author:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18)) — UI/UX Designer
+**Repository:** `arohi06/To-do-project-GRP-4`
+**Git Branch:** `feature/ui-ux`
 
 ---
 
@@ -11,30 +11,30 @@
 ```mermaid
 flowchart TD
     Start([User Opens Application]) --> AuthCheck{Is User Logged In?}
-    
+
     AuthCheck -- No --> Screen1["Screen 1: Login / Sign Up"]
     AuthCheck -- Yes --> Screen2["Screen 2: Dashboard"]
-    
+
     Screen1 -- Authenticated --> Screen2
-    
+
     Screen2 --> ActionSelect{User Action}
-    
+
     ActionSelect -- View Statistics --> Screen2
     ActionSelect -- Click '+ New Task' --> Screen3["Screen 3: Add Task Modal / Form"]
     ActionSelect -- Click 'View All Tasks' --> Screen4["Screen 4: Task List & Management"]
-    
+
     Screen3 -- Save Task --> Screen4
     Screen3 -- Cancel --> Screen2
-    
+
     Screen4 --> TaskAction{Task Action}
     TaskAction -- 1-Click Checkbox --> ToggleStatus["Toggle Pending <-> Completed"]
     TaskAction -- Filter / Search --> FilterView["Update Displayed Tasks"]
     TaskAction -- Click Edit --> Screen3
     TaskAction -- Click Delete --> ConfirmDelete{"Confirm Deletion?"}
-    
+
     ConfirmDelete -- Yes --> DeleteTask["Remove Task & Refresh List"]
     ConfirmDelete -- No --> Screen4
-    
+
     ToggleStatus --> Screen4
     FilterView --> Screen4
     DeleteTask --> Screen4
@@ -47,14 +47,14 @@ flowchart TD
 ```mermaid
 stateDiagram-v2
     [*] --> Pending : User Creates Task
-    
+
     Pending --> InProgress : Start Working
     InProgress --> Completed : Mark Finished
     Pending --> Completed : Quick Checkbox Click
-    
+
     Completed --> Pending : Uncheck / Reopen Task
     InProgress --> Pending : Blocked / Paused
-    
+
     Pending --> [*] : Delete Task
     InProgress --> [*] : Delete Task
     Completed --> [*] : Delete Task

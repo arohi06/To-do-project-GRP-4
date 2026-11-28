@@ -1,17 +1,17 @@
 # Frontend Developer Handoff Guide
 
-**Group 4 To-Do Application**  
-**Designer:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18))  
-**Frontend Developer:** Dhruva Dipak Pimpale ([@Dhruva-Pimpale](https://github.com/))  
-**Backend API Developer:** Adhira Mahesh  
-**Database Lead:** Arohi Tyagi  
-**Project Manager:** Vyas Angre  
+**Group 4 To-Do Application**
+**Designer:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18))
+**Frontend Developer:** Dhruva Dipak Pimpale ([@Dhruva-Pimpale](https://github.com/))
+**Backend API Developer:** Adhira Mahesh
+**Database Lead:** Arohi Tyagi
+**Project Manager:** Vyas Angre
 
 ---
 
 ## 1. Quick Start for Dhruva (Frontend Dev)
 
-All shared CSS and SCSS styles are organized under `frontend/styles/`.  
+All shared CSS and SCSS styles are organized under `frontend/styles/`.
 In your Angular application, `frontend/src/styles.scss` has been configured to import `frontend/styles/theme.scss`.
 
 Every component in Angular can directly use these utility and component classes without writing custom CSS!
@@ -114,9 +114,9 @@ Every component in Angular can directly use these utility and component classes 
 ```html
 <div class="task-card" [class.is-completed]="task.status === 'completed'">
   <!-- Status Checkbox -->
-  <input 
-    type="checkbox" 
-    class="task-checkbox" 
+  <input
+    type="checkbox"
+    class="task-checkbox"
     [checked]="task.status === 'completed'"
     (change)="toggleTaskStatus(task)"
   />
@@ -125,7 +125,7 @@ Every component in Angular can directly use these utility and component classes 
   <div class="task-content">
     <h4 class="task-title">{{ task.title }}</h4>
     <p class="task-desc" *ngIf="task.description">{{ task.description }}</p>
-    
+
     <div class="task-meta">
       <!-- Priority Badge -->
       <span class="badge" [ngClass]="'badge-priority-' + task.priority.toLowerCase()">

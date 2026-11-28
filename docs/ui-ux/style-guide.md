@@ -1,9 +1,9 @@
 # UI/UX Style Guide & Design System
 
-**Group 4 To-Do Application**  
-**Author:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18)) — UI/UX Designer  
-**Target Repository:** `arohi06/To-do-project-GRP-4`  
-**Branch:** `feature/ui-ux`  
+**Group 4 To-Do Application**
+**Author:** Naivedya Pramod Yadav ([@Not-naive18](https://github.com/Not-naive18)) — UI/UX Designer
+**Target Repository:** `arohi06/To-do-project-GRP-4`
+**Branch:** `feature/ui-ux`
 
 ---
 

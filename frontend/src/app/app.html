@@ -151,6 +151,11 @@
         + New Task
       </button>
 
+      <!-- DARK / LIGHT MODE TOGGLE -->
+      <button type="button" class="btn-theme" (click)="toggleTheme()">
+        {{ isDarkMode() ? '☀️ Light Mode' : '🌙 Dark Mode' }}
+      </button>
+
       <!-- LOGGED-IN USER PROFILE -->
       <div class="user-profile">
         <div class="user-details">
